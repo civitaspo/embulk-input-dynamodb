@@ -1,6 +1,7 @@
 package org.embulk.input
 
 import com.amazonaws.ClientConfiguration
+import com.amazonaws.auth.{AWSCredentials, BasicAWSCredentials, AWSCredentialsProvider}
 import com.amazonaws.auth.profile.ProfileCredentialsProvider
 import com.amazonaws.regions.Regions
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient
@@ -11,9 +12,26 @@ import java.util.{ArrayList => JArrayList, List => JList}
 import scala.collection.JavaConversions._
 
 object DynamoDBUtil {
+  private def getCredentialsProvider(task: PluginTask): AWSCredentialsProvider = {
+   {for {
+      accessKey <- Option(task.getAccessKey.orNull)
+      secretKey <- Option(task.getSecretKey.orNull)
+    } yield {
+     new AWSCredentialsProvider {
+       override def refresh(): Unit = { }
+       override def getCredentials: AWSCredentials = {
+         new BasicAWSCredentials(accessKey, secretKey)
+       }
+     }
+    }}.getOrElse{
+      new ProfileCredentialsProvider()
+    }
+  }
+
   def createClient(task: PluginTask): AmazonDynamoDBClient = {
+    val credentialsProvider: AWSCredentialsProvider = getCredentialsProvider(task)
     val client: AmazonDynamoDBClient = new AmazonDynamoDBClient(
-      new ProfileCredentialsProvider(),
+      credentialsProvider,
       new ClientConfiguration().withMaxConnections(10))
       .withRegion(Regions.fromName(task.getRegion))
 

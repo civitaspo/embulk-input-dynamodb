@@ -9,10 +9,12 @@
 
 
 ## Configuration
-
+- **access_key**: AWS access key (string, optional)
+- **secret_key**: AWS secret key (string, optional)  
+If you don't specify keys, I'll use the profile configuration file for the default profile.
 - **region**: Region Name (string, default: ap-northeast-1)
-- **table**: Table Name (string, required
-- **limit** Scan Limit (integer, default: 100)
+- **table**: Table Name (string, required)
+- **limit**: Scan Limit (integer, default: 100)
 
 ## Example
 
