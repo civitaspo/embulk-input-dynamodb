@@ -5,7 +5,7 @@ import com.amazonaws.auth.{AWSCredentials, BasicAWSCredentials, AWSCredentialsPr
 import com.amazonaws.auth.profile.ProfileCredentialsProvider
 import com.amazonaws.regions.Regions
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient
-import com.amazonaws.services.dynamodbv2.model.{ScanResult, ListTablesResult, ScanRequest}
+import com.amazonaws.services.dynamodbv2.model._
 import org.embulk.spi._
 
 import java.util.{ArrayList => JArrayList, List => JList}
@@ -38,24 +38,23 @@ object DynamoDBUtil {
     client
   }
 
-  def listTables(client: AmazonDynamoDBClient): JList[String] = {
-    val result: ListTablesResult = client.listTables()
-    result.getTableNames
-  }
 
   def scan(client: AmazonDynamoDBClient, task: PluginTask, schema: Schema, output: PageOutput): Unit = {
     val allocator: BufferAllocator = task.getBufferAllocator
     val pageBuilder: PageBuilder = new PageBuilder(allocator, schema, output)
 
-    val limit: Int = task.getLimit
     val attributes: JList[String] = new JArrayList[String]()
+
     schema.getColumns.foreach { column =>
       attributes.add(column.getName)
     }
+    val scanFilter: Map[String, Condition] = createScanFilter(task)
+    val limit: Int = task.getLimit
 
     val request: ScanRequest = new ScanRequest()
       .withTableName(task.getTable)
       .withAttributesToGet(attributes)
+      .withScanFilter(scanFilter)
       .withLimit(limit)
 
     val result: ScanResult = client.scan(request)
@@ -78,5 +77,34 @@ object DynamoDBUtil {
     }
 
     pageBuilder.finish()
+  }
+
+  private def createScanFilter(task: PluginTask): Map[String, Condition] = {
+    val filterMap = collection.mutable.HashMap[String, Condition]()
+
+    Option(task.getFilters.orNull).map { filters =>
+      filters.getFilters.map { filter =>
+        val attributeValueList = collection.mutable.ArrayBuffer[AttributeValue]()
+        attributeValueList += createAttrinuteValue(filter.getType, filter.getValue)
+        Option(filter.getValue2).map { value2 => attributeValueList += createAttrinuteValue(filter.getType, value2) }
+
+        filterMap += filter.getName -> new Condition()
+          .withComparisonOperator(filter.getCondition)
+          .withAttributeValueList(attributeValueList)
+      }
+    }
+
+    filterMap.toMap
+  }
+
+  private def createAttrinuteValue(t: String, v: String): AttributeValue = {
+    t match {
+      case "string" =>
+        new AttributeValue().withS(v)
+      case "long" | "double" =>
+        new AttributeValue().withN(v)
+      case "boolean" =>
+        new AttributeValue().withBOOL(v.toBoolean)
+    }
   }
 }

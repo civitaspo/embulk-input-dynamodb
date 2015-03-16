@@ -27,6 +27,10 @@ trait PluginTask extends Task {
   @Config("columns")
   def getColumns: SchemaConfig
 
+  @Config("filters")
+  @ConfigDefault("null")
+  def getFilters: Optional[Filter]
+
   @ConfigInject
   def getBufferAllocator: BufferAllocator
 }
