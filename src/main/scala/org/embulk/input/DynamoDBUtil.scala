@@ -10,6 +10,7 @@ import org.embulk.spi._
 
 import java.util.{ArrayList => JArrayList, List => JList, Map => JMap}
 import scala.collection.JavaConversions._
+import scala.util.control.Breaks._
 
 object DynamoDBUtil {
   private def getCredentialsProvider(task: PluginTask): AWSCredentialsProvider = {
@@ -66,7 +67,7 @@ object DynamoDBUtil {
       val result: ScanResult = client.scan(request)
       evaluateKey = result.getLastEvaluatedKey
 
-      result.getItems.foreach { item =>
+      breakable { result.getItems.foreach { item =>
         schema.getColumns.foreach { column =>
           val value = item.get(column.getName)
           column.getType.getName match {
@@ -84,9 +85,10 @@ object DynamoDBUtil {
         pageBuilder.addRecord()
         recordCount += 1
 	if ( recordLimit <= recordCount ) {
+          break
         }
-      }
-    } while(evaluateKey != null && recordLimit > recordCount)
+      } }
+    } while(evaluateKey != null && recordLimit > recordCount )
 
     pageBuilder.finish()
   }
