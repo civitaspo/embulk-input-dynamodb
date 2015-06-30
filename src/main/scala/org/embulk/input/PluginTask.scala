@@ -20,10 +20,6 @@ trait PluginTask extends Task {
   @Config("table")
   def getTable: String
 
-  @Config("limit")
-  @ConfigDefault("100")
-  def getLimit: Int
-
   @Config("columns")
   def getColumns: SchemaConfig
 

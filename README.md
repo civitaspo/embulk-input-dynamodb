@@ -14,7 +14,6 @@
 If you don't specify keys, I'll use the profile configuration file for the default profile.
 - **region**: Region Name (string, default: ap-northeast-1)
 - **table**: Table Name (string, required)
-- **limit**: Scan Limit (integer, default: 100)
 
 ## Example
 
@@ -25,7 +24,6 @@ in:
   secret_key: YOUR_SECRET_KEY
   region: ap-northeast-1
   table: YOUR_TABLE_NAME
-  limit: 1000
   columns:
     - {name: ColumnA, type: long}
     - {name: ColumnB, type: double}

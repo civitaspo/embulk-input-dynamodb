@@ -8,7 +8,7 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient
 import com.amazonaws.services.dynamodbv2.model._
 import org.embulk.spi._
 
-import java.util.{ArrayList => JArrayList, List => JList}
+import java.util.{ArrayList => JArrayList, List => JList, Map => JMap}
 import scala.collection.JavaConversions._
 
 object DynamoDBUtil {
@@ -49,32 +49,36 @@ object DynamoDBUtil {
       attributes.add(column.getName)
     }
     val scanFilter: Map[String, Condition] = createScanFilter(task)
-    val limit: Int = task.getLimit
+    var evaluateKey: JMap[String, AttributeValue] = null
 
-    val request: ScanRequest = new ScanRequest()
-      .withTableName(task.getTable)
-      .withAttributesToGet(attributes)
-      .withScanFilter(scanFilter)
-      .withLimit(limit)
+    do {
+      val request: ScanRequest = new ScanRequest()
+        .withTableName(task.getTable)
+        .withAttributesToGet(attributes)
+        .withScanFilter(scanFilter)
+        .withExclusiveStartKey(evaluateKey)
 
-    val result: ScanResult = client.scan(request)
-    result.getItems.foreach { item =>
-      schema.getColumns.foreach { column =>
-        val value = item.get(column.getName)
-        column.getType.getName match {
-          case "string" =>
-            pageBuilder.setString(column, Option(value) map { _.getS } getOrElse { "" })
-          case "long" =>
-            pageBuilder.setLong(column, Option(value) map { _.getN.toLong } getOrElse { 0L })
-          case "double" =>
-            pageBuilder.setDouble(column, Option(value) map { _.getN.toDouble } getOrElse { 0D })
-          case "boolean" =>
-            pageBuilder.setBoolean(column, Option(value) map { _.getBOOL == true } getOrElse { false })
-          case _ => /* Do nothing */
+      val result: ScanResult = client.scan(request)
+      evaluateKey = result.getLastEvaluatedKey
+
+      result.getItems.foreach { item =>
+        schema.getColumns.foreach { column =>
+          val value = item.get(column.getName)
+          column.getType.getName match {
+            case "string" =>
+              pageBuilder.setString(column, Option(value) map { _.getS } getOrElse { "" })
+            case "long" =>
+              pageBuilder.setLong(column, Option(value) map { _.getN.toLong } getOrElse { 0L })
+            case "double" =>
+              pageBuilder.setDouble(column, Option(value) map { _.getN.toDouble } getOrElse { 0D })
+            case "boolean" =>
+              pageBuilder.setBoolean(column, Option(value) map { _.getBOOL == true } getOrElse { false })
+            case _ => /* Do nothing */
+          }
         }
+        pageBuilder.addRecord()
       }
-      pageBuilder.addRecord()
-    }
+    } while(evaluateKey != null)
 
     pageBuilder.finish()
   }
