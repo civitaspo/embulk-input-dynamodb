@@ -53,7 +53,7 @@ object DynamoDBUtil {
 
     val scanLimit: Int = task.getScanLimit
     val recordLimit: Int = task.getRecordLimit
-    var recordCount = 0
+    var recordCount: Int = 0
 
     do {
       val request: ScanRequest = new ScanRequest()
@@ -61,6 +61,7 @@ object DynamoDBUtil {
         .withAttributesToGet(attributes)
         .withScanFilter(scanFilter)
         .withExclusiveStartKey(evaluateKey)
+        .withLimit(scanLimit)
 
       val result: ScanResult = client.scan(request)
       evaluateKey = result.getLastEvaluatedKey
