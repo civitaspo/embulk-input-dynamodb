@@ -53,7 +53,7 @@ object DynamoDBUtil {
     var evaluateKey: JMap[String, AttributeValue] = null
 
     val scanLimit: Int = task.getScanLimit
-    val recordLimit: Int = task.getRecordLimit
+    val recordLimit: Long = task.getRecordLimit
     var recordCount: Int = 0
 
     do {
