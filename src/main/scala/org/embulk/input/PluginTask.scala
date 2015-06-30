@@ -17,6 +17,14 @@ trait PluginTask extends Task {
   @ConfigDefault("ap-northeast-1")
   def getRegion: String
 
+  @Config("scan_limit")
+  @ConfigDefault("100")
+  def getScanLimit: Int
+
+  @Config("record_limit")
+  @ConfigDefault("100000")
+  def getRecordLimit: Int
+
   @Config("table")
   def getTable: String
 

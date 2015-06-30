@@ -51,6 +51,10 @@ object DynamoDBUtil {
     val scanFilter: Map[String, Condition] = createScanFilter(task)
     var evaluateKey: JMap[String, AttributeValue] = null
 
+    val scanLimit: Int = task.getScanLimit
+    val recordLimit: Int = task.getRecordLimit
+    val numberStream = Stream.from(0).iterator
+
     do {
       val request: ScanRequest = new ScanRequest()
         .withTableName(task.getTable)
@@ -77,8 +81,9 @@ object DynamoDBUtil {
           }
         }
         pageBuilder.addRecord()
+        numberStream.next
       }
-    } while(evaluateKey != null)
+    } while(evaluateKey != null && recordLimit > numberStream)
 
     pageBuilder.finish()
   }
