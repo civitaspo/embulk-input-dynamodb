@@ -53,7 +53,7 @@ object DynamoDBUtil {
 
     val scanLimit: Int = task.getScanLimit
     val recordLimit: Int = task.getRecordLimit
-    val numberStream = Stream.from(0).iterator
+    var recordCount = 0
 
     do {
       val request: ScanRequest = new ScanRequest()
@@ -81,9 +81,9 @@ object DynamoDBUtil {
           }
         }
         pageBuilder.addRecord()
-        numberStream.next
+        recordCount += 1
       }
-    } while(evaluateKey != null && recordLimit > numberStream)
+    } while(evaluateKey != null && recordLimit > recordCount)
 
     pageBuilder.finish()
   }
