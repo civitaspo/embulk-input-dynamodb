@@ -83,6 +83,8 @@ object DynamoDBUtil {
         }
         pageBuilder.addRecord()
         recordCount += 1
+	if ( recordLimit <= recordCount ) {
+        }
       }
     } while(evaluateKey != null && recordLimit > recordCount)
 
