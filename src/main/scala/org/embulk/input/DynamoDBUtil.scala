@@ -1,17 +1,27 @@
 package org.embulk.input
 
-import com.amazonaws.ClientConfiguration
-import com.amazonaws.auth.{AWSCredentials, BasicAWSCredentials, AWSCredentialsProvider}
+import java.util.{ArrayList => JArrayList, List => JList, Map => JMap}
+
 import com.amazonaws.auth.profile.ProfileCredentialsProvider
+import com.amazonaws.auth.{AWSCredentials, AWSCredentialsProvider, BasicAWSCredentials}
 import com.amazonaws.regions.Regions
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient
 import com.amazonaws.services.dynamodbv2.model._
+import com.amazonaws.{AmazonClientException, ClientConfiguration}
 import org.embulk.spi._
 
-import java.util.{ArrayList => JArrayList, List => JList, Map => JMap}
 import scala.collection.JavaConversions._
 
 object DynamoDBUtil {
+  def createClient(task: PluginTask): AmazonDynamoDBClient = {
+    try {
+      createClientUsingIAMRole(task)
+    } catch {
+      case e: AmazonClientException =>
+        createClientUsingCredentials(task)
+    }
+  }
+
   private def getCredentialsProvider(task: PluginTask): AWSCredentialsProvider = {
    {for {
       accessKey <- Option(task.getAccessKey.orNull)
@@ -23,17 +33,29 @@ object DynamoDBUtil {
          new BasicAWSCredentials(accessKey, secretKey)
        }
      }
-    }}.getOrElse{
+    }}.getOrElse {
       new ProfileCredentialsProvider()
     }
   }
 
-  def createClient(task: PluginTask): AmazonDynamoDBClient = {
+  private def createClientUsingIAMRole(task: PluginTask): AmazonDynamoDBClient = {
+    val client: AmazonDynamoDBClient = new AmazonDynamoDBClient(
+      new ClientConfiguration().withMaxConnections(10))
+      .withRegion(Regions.fromName(task.getRegion))
+
+    client.describeTable(task.getTable)   // FIXME
+
+    client
+  }
+
+  private def createClientUsingCredentials(task: PluginTask): AmazonDynamoDBClient = {
     val credentialsProvider: AWSCredentialsProvider = getCredentialsProvider(task)
     val client: AmazonDynamoDBClient = new AmazonDynamoDBClient(
       credentialsProvider,
       new ClientConfiguration().withMaxConnections(10))
       .withRegion(Regions.fromName(task.getRegion))
+
+    client.describeTable(task.getTable)  // FIXME
 
     client
   }
