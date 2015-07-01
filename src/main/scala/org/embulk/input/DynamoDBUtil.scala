@@ -29,9 +29,7 @@ object DynamoDBUtil {
   }
 
   def createClient(task: PluginTask): AmazonDynamoDBClient = {
-    val credentialsProvider: AWSCredentialsProvider = getCredentialsProvider(task)
     val client: AmazonDynamoDBClient = new AmazonDynamoDBClient(
-      credentialsProvider,
       new ClientConfiguration().withMaxConnections(10))
       .withRegion(Regions.fromName(task.getRegion))
 
