@@ -10,6 +10,7 @@ import org.embulk.spi._
 
 import java.util.{ArrayList => JArrayList, List => JList, Map => JMap}
 import scala.collection.JavaConversions._
+import scala.util.control.Breaks._
 
 object DynamoDBUtil {
   private def getCredentialsProvider(task: PluginTask): AWSCredentialsProvider = {
@@ -51,17 +52,22 @@ object DynamoDBUtil {
     val scanFilter: Map[String, Condition] = createScanFilter(task)
     var evaluateKey: JMap[String, AttributeValue] = null
 
+    val scanLimit: Int = task.getScanLimit
+    val recordLimit: Long = task.getRecordLimit
+    var recordCount: Long = 0
+
     do {
       val request: ScanRequest = new ScanRequest()
         .withTableName(task.getTable)
         .withAttributesToGet(attributes)
         .withScanFilter(scanFilter)
         .withExclusiveStartKey(evaluateKey)
+        .withLimit(scanLimit)
 
       val result: ScanResult = client.scan(request)
       evaluateKey = result.getLastEvaluatedKey
 
-      result.getItems.foreach { item =>
+      breakable { result.getItems.foreach { item =>
         schema.getColumns.foreach { column =>
           val value = item.get(column.getName)
           column.getType.getName match {
@@ -77,8 +83,12 @@ object DynamoDBUtil {
           }
         }
         pageBuilder.addRecord()
-      }
-    } while(evaluateKey != null)
+        recordCount += 1
+	if ( recordLimit <= recordCount ) {
+          break
+        }
+      } }
+    } while(evaluateKey != null && recordLimit > recordCount )
 
     pageBuilder.finish()
   }

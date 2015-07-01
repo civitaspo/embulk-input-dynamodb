@@ -14,6 +14,8 @@
 If you don't specify keys, I'll use the profile configuration file for the default profile.
 - **region**: Region Name (string, default: ap-northeast-1)
 - **table**: Table Name (string, required)
+- **scan_limit**: DynamoDB 1time Scan Query size limit (Int, default: 100) 
+- **record_limit**: Max Record Search limit (Long, default: 100000) 
 
 ## Example
 
