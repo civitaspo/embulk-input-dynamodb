@@ -54,7 +54,7 @@ object DynamoDBUtil {
 
     val scanLimit: Int = task.getScanLimit
     val recordLimit: Long = task.getRecordLimit
-    var recordCount: Int = 0
+    var recordCount: Long = 0
 
     do {
       val request: ScanRequest = new ScanRequest()
