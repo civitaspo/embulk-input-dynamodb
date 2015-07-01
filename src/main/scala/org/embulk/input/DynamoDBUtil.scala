@@ -10,7 +10,6 @@ import org.embulk.spi._
 
 import java.util.{ArrayList => JArrayList, List => JList, Map => JMap}
 import scala.collection.JavaConversions._
-import scala.util.control.Breaks._
 
 object DynamoDBUtil {
   private def getCredentialsProvider(task: PluginTask): AWSCredentialsProvider = {
@@ -52,22 +51,27 @@ object DynamoDBUtil {
     val scanFilter: Map[String, Condition] = createScanFilter(task)
     var evaluateKey: JMap[String, AttributeValue] = null
 
-    val scanLimit: Int = task.getScanLimit
+    val scanLimit: Long   = task.getScanLimit
     val recordLimit: Long = task.getRecordLimit
     var recordCount: Long = 0
 
     do {
+      val batchSize = getScanLimit(scanLimit, recordLimit, recordCount)
+
       val request: ScanRequest = new ScanRequest()
         .withTableName(task.getTable)
         .withAttributesToGet(attributes)
         .withScanFilter(scanFilter)
         .withExclusiveStartKey(evaluateKey)
-        .withLimit(scanLimit)
+
+      if (batchSize > 0) {
+        request.setLimit(batchSize)
+      }
 
       val result: ScanResult = client.scan(request)
       evaluateKey = result.getLastEvaluatedKey
 
-      breakable { result.getItems.foreach { item =>
+      result.getItems.foreach { item =>
         schema.getColumns.foreach { column =>
           val value = item.get(column.getName)
           column.getType.getName match {
@@ -84,13 +88,18 @@ object DynamoDBUtil {
         }
         pageBuilder.addRecord()
         recordCount += 1
-	if ( recordLimit <= recordCount ) {
-          break
-        }
-      } }
-    } while(evaluateKey != null && recordLimit > recordCount )
+      }
+    } while(evaluateKey != null && (recordLimit == 0 || recordLimit > recordCount))
 
     pageBuilder.finish()
+  }
+
+  private def getScanLimit(scanLimit: Long, recordLimit: Long, recordCount: Long): Int = {
+    if (scanLimit > 0 && recordLimit > 0) {
+      math.min(scanLimit, recordLimit - recordCount).toInt
+    } else if (scanLimit > 0 || recordLimit > 0) {
+      math.max(scanLimit, recordLimit).toInt
+    } else { 0 }
   }
 
   private def createScanFilter(task: PluginTask): Map[String, Condition] = {
@@ -99,8 +108,8 @@ object DynamoDBUtil {
     Option(task.getFilters.orNull).map { filters =>
       filters.getFilters.map { filter =>
         val attributeValueList = collection.mutable.ArrayBuffer[AttributeValue]()
-        attributeValueList += createAttrinuteValue(filter.getType, filter.getValue)
-        Option(filter.getValue2).map { value2 => attributeValueList += createAttrinuteValue(filter.getType, value2) }
+        attributeValueList += createAttributeValue(filter.getType, filter.getValue)
+        Option(filter.getValue2).map { value2 => attributeValueList += createAttributeValue(filter.getType, value2) }
 
         filterMap += filter.getName -> new Condition()
           .withComparisonOperator(filter.getCondition)
@@ -111,7 +120,7 @@ object DynamoDBUtil {
     filterMap.toMap
   }
 
-  private def createAttrinuteValue(t: String, v: String): AttributeValue = {
+  private def createAttributeValue(t: String, v: String): AttributeValue = {
     t match {
       case "string" =>
         new AttributeValue().withS(v)

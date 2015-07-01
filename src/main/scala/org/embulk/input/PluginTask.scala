@@ -18,12 +18,12 @@ trait PluginTask extends Task {
   def getRegion: String
 
   @Config("scan_limit")
-  @ConfigDefault("100")
-  def getScanLimit: Int
+  @ConfigDefault("0")
+  def getScanLimit: Long
 
   @Config("record_limit")
-  @ConfigDefault("100000")
-  def getRecordLimit: Int
+  @ConfigDefault("0")
+  def getRecordLimit: Long
 
   @Config("table")
   def getTable: String
