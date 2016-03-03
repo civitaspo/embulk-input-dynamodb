@@ -1,0 +1,18 @@
+in:
+  type: dynamodb
+  region: ENV_VAR
+  table: ENV_VAR
+  auth_method: env
+  columns:
+    - {name: pri-key,  type: string}
+    - {name: sort-key, type: long}
+    - {name: value, type: string}
+
+out:
+  type: file
+  path_prefix: result
+  file_ext: tsv
+  formatter:
+    type: csv
+    delimiter: "\t"
+    header_line: false

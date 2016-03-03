@@ -14,50 +14,11 @@ import scala.collection.JavaConversions._
 
 object DynamoDBUtil {
   def createClient(task: PluginTask): AmazonDynamoDBClient = {
-    try {
-      createClientUsingIAMRole(task)
-    } catch {
-      case e: AmazonClientException =>
-        createClientUsingCredentials(task)
-    }
-  }
-
-  private def getCredentialsProvider(task: PluginTask): AWSCredentialsProvider = {
-   {for {
-      accessKey <- Option(task.getAccessKey.orNull)
-      secretKey <- Option(task.getSecretKey.orNull)
-    } yield {
-     new AWSCredentialsProvider {
-       override def refresh(): Unit = { }
-       override def getCredentials: AWSCredentials = {
-         new BasicAWSCredentials(accessKey, secretKey)
-       }
-     }
-    }}.getOrElse {
-      new ProfileCredentialsProvider()
-    }
-  }
-
-  private def createClientUsingIAMRole(task: PluginTask): AmazonDynamoDBClient = {
-    val client: AmazonDynamoDBClient = new AmazonDynamoDBClient(
-      new ClientConfiguration().withMaxConnections(10))
+    new AmazonDynamoDBClient(
+      AwsCredentials.getCredentialsProvider(task),
+      new ClientConfiguration()
+        .withMaxConnections(50))  // SDK Default Value
       .withRegion(Regions.fromName(task.getRegion))
-
-    client.describeTable(task.getTable)   // FIXME
-
-    client
-  }
-
-  private def createClientUsingCredentials(task: PluginTask): AmazonDynamoDBClient = {
-    val credentialsProvider: AWSCredentialsProvider = getCredentialsProvider(task)
-    val client: AmazonDynamoDBClient = new AmazonDynamoDBClient(
-      credentialsProvider,
-      new ClientConfiguration().withMaxConnections(10))
-      .withRegion(Regions.fromName(task.getRegion))
-
-    client.describeTable(task.getTable)  // FIXME
-
-    client
   }
 
 
