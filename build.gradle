@@ -16,13 +16,15 @@ configurations {
 version = "0.0.3"
 
 dependencies {
-    compile "org.scala-lang:scala-library:2.11.5"
+    compile "org.scala-lang:scala-library:2.11.7"
 
-    compile  "org.embulk:embulk-core:0.4.10"
-    provided "org.embulk:embulk-core:0.4.10"
+    compile  "org.embulk:embulk-core:0.7.10"
+    provided "org.embulk:embulk-core:0.7.10"
 
-    compile "com.amazonaws:aws-java-sdk-dynamodb:1.9.22"
+    compile "com.amazonaws:aws-java-sdk-dynamodb:1.10.43"
     testCompile "junit:junit:4.+"
+    testCompile "org.embulk:embulk-standards:0.7.10"
+    testCompile "org.embulk:embulk-core:0.7.10:tests"
 }
 
 compileScala {

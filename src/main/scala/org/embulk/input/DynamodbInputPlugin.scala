@@ -21,15 +21,21 @@ class DynamodbInputPlugin extends InputPlugin {
     Exec.newConfigDiff()
   }
 
-  def cleanup(taskSource: TaskSource, schema: Schema, taskCount: Int, successCommitReports: JList[CommitReport]): Unit = {
-  }
-
-  def run(taskSource: TaskSource, schema: Schema, taskIndex: Int, output: PageOutput): CommitReport = {
+  def run(taskSource: TaskSource, schema: Schema, taskIndex: Int, output: PageOutput): TaskReport = {
     val task: PluginTask = taskSource.loadTask(classOf[PluginTask])
 
     val client: AmazonDynamoDBClient = DynamoDBUtil.createClient(task)
     DynamoDBUtil.scan(client, task, schema, output)
 
-    Exec.newCommitReport()
+    Exec.newTaskReport()
+  }
+
+  def cleanup(taskSource: TaskSource, schema: Schema, taskCount: Int, successTaskReports: JList[TaskReport]): Unit = {
+    // TODO
+  }
+
+  def guess(config: ConfigSource): ConfigDiff = {
+    // TODO
+    null
   }
 }
