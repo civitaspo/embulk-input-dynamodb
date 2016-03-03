@@ -15,16 +15,19 @@ configurations {
 
 version = "0.0.3"
 
+sourceCompatibility = 1.7
+targetCompatibility = 1.7
+
 dependencies {
     compile "org.scala-lang:scala-library:2.11.7"
 
-    compile  "org.embulk:embulk-core:0.7.10"
-    provided "org.embulk:embulk-core:0.7.10"
+    compile  "org.embulk:embulk-core:0.8.6"
+    provided "org.embulk:embulk-core:0.8.6"
 
     compile "com.amazonaws:aws-java-sdk-dynamodb:1.10.43"
     testCompile "junit:junit:4.+"
-    testCompile "org.embulk:embulk-standards:0.7.10"
-    testCompile "org.embulk:embulk-core:0.7.10:tests"
+    testCompile "org.embulk:embulk-standards:0.8.6"
+    testCompile "org.embulk:embulk-core:0.8.6:tests"
 }
 
 compileScala {
@@ -49,6 +52,23 @@ task classpath(type: Copy, dependsOn: ["jar"]) {
     into "classpath"
 }
 clean { delete 'classpath' }
+
+checkstyle {
+    configFile = file("${project.rootDir}/config/checkstyle/checkstyle.xml")
+    toolVersion = '6.14.1'
+}
+checkstyleMain {
+    configFile = file("${project.rootDir}/config/checkstyle/default.xml")
+    ignoreFailures = true
+}
+checkstyleTest {
+    configFile = file("${project.rootDir}/config/checkstyle/default.xml")
+    ignoreFailures = true
+}
+task checkstyle(type: Checkstyle) {
+    classpath = sourceSets.main.output + sourceSets.test.output
+    source = sourceSets.main.allJava + sourceSets.test.allJava
+}
 
 task gem(type: JRubyExec, dependsOn: ["build", "gemspec", "classpath"]) {
     jrubyArgs "-rrubygems/gem_runner", "-eGem::GemRunner.new.run(ARGV)", "build"
