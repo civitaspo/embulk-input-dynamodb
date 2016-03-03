@@ -1,7 +1,8 @@
-package org.embulk.input
+package org.embulk.input.dynamodb
 
 import com.amazonaws.auth._
 import com.amazonaws.auth.profile.ProfileCredentialsProvider
+import com.google.common.base.Optional
 import org.embulk.config.ConfigException
 
 object AwsCredentials {
@@ -24,9 +25,10 @@ object AwsCredentials {
     } else {
       val cred = task.getAuthMethod.get() match {
         case "basic" =>
-          new BasicAWSCredentials(
-            task.getAccessKey.get(),
-            task.getSecretKey.get())
+          val accessKey = require(task.getAccessKey, "'access_key'")
+          val secretKey = require(task.getSecretKey, "'secret_key'")
+
+          new BasicAWSCredentials(accessKey, secretKey)
 
         case "env" =>
           new EnvironmentVariableCredentialsProvider().getCredentials
@@ -36,13 +38,19 @@ object AwsCredentials {
 
         case "profile" =>
           val profileName = task.getProfileName.or("default")
-          new ProfileCredentialsProvider(profileName).getCredentials
+
+          try {
+            new ProfileCredentialsProvider(profileName).getCredentials
+          } catch {
+            case e: IllegalArgumentException =>
+              throw new ConfigException(s"No AWS profile named $profileName")
+          }
 
         case "properties" =>
           new SystemPropertiesCredentialsProvider().getCredentials
 
         case _ =>
-          throw new ConfigException(s"Unknown auth_method ${task.getAuthMethod.get()}")
+          throw new ConfigException(s"Unknown 'auth_method' ${task.getAuthMethod.get()}")
       }
 
       new AWSCredentialsProvider {
@@ -50,6 +58,14 @@ object AwsCredentials {
 
         override def getCredentials: AWSCredentials = { cred }
       }
+    }
+  }
+
+  private def require[A](value: Optional[A], message: String): A = {
+    if (value.isPresent) {
+      value.get()
+    } else {
+      throw new ConfigException("Required option is not set: " + message)
     }
   }
 }

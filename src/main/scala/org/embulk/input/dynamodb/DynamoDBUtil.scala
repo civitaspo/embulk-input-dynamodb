@@ -1,19 +1,18 @@
-package org.embulk.input
+package org.embulk.input.dynamodb
 
 import java.util.{ArrayList => JArrayList, List => JList, Map => JMap}
 
-import com.amazonaws.auth.profile.ProfileCredentialsProvider
-import com.amazonaws.auth.{AWSCredentials, AWSCredentialsProvider, BasicAWSCredentials}
+import com.amazonaws.ClientConfiguration
 import com.amazonaws.regions.Regions
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient
-import com.amazonaws.services.dynamodbv2.model._
-import com.amazonaws.{AmazonClientException, ClientConfiguration}
-import org.embulk.spi._
+import com.amazonaws.services.dynamodbv2.model.{AttributeValue, Condition, ScanRequest, ScanResult}
+import org.embulk.spi.{BufferAllocator, PageBuilder, PageOutput, Schema}
 
 import scala.collection.JavaConversions._
 
 object DynamoDBUtil {
-  def createClient(task: PluginTask): AmazonDynamoDBClient = {
+  def createClient(task: PluginTask): AmazonDynamoDBClient =
+  {
     new AmazonDynamoDBClient(
       AwsCredentials.getCredentialsProvider(task),
       new ClientConfiguration()
@@ -22,7 +21,12 @@ object DynamoDBUtil {
   }
 
 
-  def scan(client: AmazonDynamoDBClient, task: PluginTask, schema: Schema, output: PageOutput): Unit = {
+  def scan(
+            task: PluginTask,
+            schema: Schema,
+            output: PageOutput)
+          (implicit client: AmazonDynamoDBClient): Unit =
+  {
     val allocator: BufferAllocator = task.getBufferAllocator
     val pageBuilder: PageBuilder = new PageBuilder(allocator, schema, output)
 
@@ -31,7 +35,7 @@ object DynamoDBUtil {
     schema.getColumns.foreach { column =>
       attributes.add(column.getName)
     }
-    val scanFilter: Map[String, Condition] = createScanFilter(task)
+    val scanFilter: JMap[String, Condition] = createScanFilter(task)
     var evaluateKey: JMap[String, AttributeValue] = null
 
     val scanLimit: Long   = task.getScanLimit
@@ -77,7 +81,8 @@ object DynamoDBUtil {
     pageBuilder.finish()
   }
 
-  private def getScanLimit(scanLimit: Long, recordLimit: Long, recordCount: Long): Int = {
+  private def getScanLimit(scanLimit: Long, recordLimit: Long, recordCount: Long): Int =
+  {
     if (scanLimit > 0 && recordLimit > 0) {
       math.min(scanLimit, recordLimit - recordCount).toInt
     } else if (scanLimit > 0 || recordLimit > 0) {
@@ -85,14 +90,16 @@ object DynamoDBUtil {
     } else { 0 }
   }
 
-  private def createScanFilter(task: PluginTask): Map[String, Condition] = {
+  private def createScanFilter(task: PluginTask): Map[String, Condition] =
+  {
     val filterMap = collection.mutable.HashMap[String, Condition]()
 
     Option(task.getFilters.orNull).map { filters =>
       filters.getFilters.map { filter =>
         val attributeValueList = collection.mutable.ArrayBuffer[AttributeValue]()
         attributeValueList += createAttributeValue(filter.getType, filter.getValue)
-        Option(filter.getValue2).map { value2 => attributeValueList += createAttributeValue(filter.getType, value2) }
+        Option(filter.getValue2).map { value2 =>
+          attributeValueList+= createAttributeValue(filter.getType, value2) }
 
         filterMap += filter.getName -> new Condition()
           .withComparisonOperator(filter.getCondition)
@@ -103,7 +110,8 @@ object DynamoDBUtil {
     filterMap.toMap
   }
 
-  private def createAttributeValue(t: String, v: String): AttributeValue = {
+  private def createAttributeValue(t: String, v: String): AttributeValue =
+  {
     t match {
       case "string" =>
         new AttributeValue().withS(v)

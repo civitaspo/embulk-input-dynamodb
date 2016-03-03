@@ -1,7 +1,7 @@
-package org.embulk.input
+package org.embulk.input.dynamodb
 
 import com.google.common.base.Optional
-import org.embulk.config.{ConfigInject, ConfigDefault, Config, Task}
+import org.embulk.config.{Config, ConfigDefault, ConfigInject, Task}
 import org.embulk.spi.{BufferAllocator, SchemaConfig}
 
 trait PluginTask extends Task {

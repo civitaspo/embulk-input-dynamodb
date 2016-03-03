@@ -1,4 +1,4 @@
-package org.embulk.input
+package org.embulk.input.dynamodb
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.google.common.base.Objects

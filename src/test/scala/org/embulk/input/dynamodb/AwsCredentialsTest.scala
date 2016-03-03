@@ -1,4 +1,4 @@
-package org.embulk.input
+package org.embulk.input.dynamodb
 
 import java.io.File
 import java.nio.charset.Charset
@@ -6,6 +6,7 @@ import java.nio.file.{FileSystems, Files}
 
 import com.google.inject.{Binder, Module}
 import org.embulk.config.ConfigSource
+import org.embulk.exec.PartialExecutionException
 import org.embulk.plugin.InjectedPluginSource
 import org.embulk.spi.InputPlugin
 import org.embulk.{EmbulkEmbed, EmbulkTestRuntime}
@@ -82,6 +83,18 @@ class AwsCredentialsTest {
     doTest(config)
   }
 
+  @Test(expected = classOf[PartialExecutionException])
+  def setAuthMethod_Basic_NotSet() {
+    val config = embulk.newConfigLoader().fromYamlFile(
+      new File("src/test/resources/yaml/authMethodBasic_Error.yml"))
+
+    config.getNested("in")
+      .set("region", EMBULK_DYNAMODB_TEST_REGION)
+      .set("table", EMBULK_DYNAMODB_TEST_TABLE)
+
+    doTest(config)
+  }
+
   @Test
   def setAuthMethod_Env() {
     val config = embulk.newConfigLoader().fromYamlFile(
@@ -103,6 +116,19 @@ class AwsCredentialsTest {
       .set("region", EMBULK_DYNAMODB_TEST_REGION)
       .set("table", EMBULK_DYNAMODB_TEST_TABLE)
       .set("profile_name", EMBULK_DYNAMODB_TEST_PROFILE_NAME)
+
+    doTest(config)
+  }
+
+  @Test(expected = classOf[PartialExecutionException])
+  def setAuthMethod_Profile_NotExistProfileName() {
+    val config = embulk.newConfigLoader().fromYamlFile(
+      new File("src/test/resources/yaml/authMethodProfile.yml"))
+
+    config.getNested("in")
+      .set("region", EMBULK_DYNAMODB_TEST_REGION)
+      .set("table", EMBULK_DYNAMODB_TEST_TABLE)
+      .set("profile_name", "NotExistName")
 
     doTest(config)
   }

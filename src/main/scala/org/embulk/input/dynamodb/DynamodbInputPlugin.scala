@@ -1,4 +1,4 @@
-package org.embulk.input
+package org.embulk.input.dynamodb
 
 import java.util.{List => JList}
 
@@ -24,8 +24,8 @@ class DynamodbInputPlugin extends InputPlugin {
   def run(taskSource: TaskSource, schema: Schema, taskIndex: Int, output: PageOutput): TaskReport = {
     val task: PluginTask = taskSource.loadTask(classOf[PluginTask])
 
-    val client: AmazonDynamoDBClient = DynamoDBUtil.createClient(task)
-    DynamoDBUtil.scan(client, task, schema, output)
+    implicit val client: AmazonDynamoDBClient = DynamoDBUtil.createClient(task)
+    DynamoDBUtil.scan(task, schema, output)
 
     Exec.newTaskReport()
   }

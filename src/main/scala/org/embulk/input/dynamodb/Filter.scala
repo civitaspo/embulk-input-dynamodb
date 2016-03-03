@@ -1,8 +1,8 @@
-package org.embulk.input
+package org.embulk.input.dynamodb
 
 import java.util.{List => JList}
 
-import com.fasterxml.jackson.annotation.{JsonValue, JsonCreator}
+import com.fasterxml.jackson.annotation.{JsonCreator, JsonValue}
 import com.google.common.base.Objects
 
 class Filter {
