@@ -6,13 +6,14 @@ import com.amazonaws.ClientConfiguration
 import com.amazonaws.regions.Regions
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient
 import com.amazonaws.services.dynamodbv2.model.{AttributeValue, Condition, ScanRequest, ScanResult}
-import org.embulk.spi.{BufferAllocator, PageBuilder, PageOutput, Schema}
+import org.embulk.spi._
+import org.msgpack.value.{ValueFactory, Value}
 
 import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 
 object DynamoDBUtil {
-  def createClient(task: PluginTask): AmazonDynamoDBClient =
-  {
+  def createClient(task: PluginTask): AmazonDynamoDBClient = {
     new AmazonDynamoDBClient(
       AwsCredentials.getCredentialsProvider(task),
       new ClientConfiguration()
@@ -60,16 +61,18 @@ object DynamoDBUtil {
 
       result.getItems.foreach { item =>
         schema.getColumns.foreach { column =>
-          val value = item.get(column.getName)
+          val value = item.asScala.get(column.getName)
           column.getType.getName match {
             case "string" =>
-              pageBuilder.setString(column, Option(value) map { _.getS } getOrElse { "" })
+              hoge(column, value, pageBuilder.setString)
             case "long" =>
-              pageBuilder.setLong(column, Option(value) map { _.getN.toLong } getOrElse { 0L })
+              hoge(column, value, pageBuilder.setLong)
             case "double" =>
-              pageBuilder.setDouble(column, Option(value) map { _.getN.toDouble } getOrElse { 0D })
+              hoge(column, value, pageBuilder.setDouble)
             case "boolean" =>
-              pageBuilder.setBoolean(column, Option(value) map { _.getBOOL == true } getOrElse { false })
+              hoge(column, value, pageBuilder.setBoolean)
+            case "json" =>
+              hoge(column, value, pageBuilder.setJson)
             case _ => /* Do nothing */
           }
         }
@@ -81,8 +84,7 @@ object DynamoDBUtil {
     pageBuilder.finish()
   }
 
-  private def getScanLimit(scanLimit: Long, recordLimit: Long, recordCount: Long): Int =
-  {
+  private def getScanLimit(scanLimit: Long, recordLimit: Long, recordCount: Long): Int = {
     if (scanLimit > 0 && recordLimit > 0) {
       math.min(scanLimit, recordLimit - recordCount).toInt
     } else if (scanLimit > 0 || recordLimit > 0) {
@@ -90,8 +92,7 @@ object DynamoDBUtil {
     } else { 0 }
   }
 
-  private def createScanFilter(task: PluginTask): Map[String, Condition] =
-  {
+  private def createScanFilter(task: PluginTask): Map[String, Condition] = {
     val filterMap = collection.mutable.HashMap[String, Condition]()
 
     Option(task.getFilters.orNull).map { filters =>
@@ -110,8 +111,7 @@ object DynamoDBUtil {
     filterMap.toMap
   }
 
-  private def createAttributeValue(t: String, v: String): AttributeValue =
-  {
+  private def createAttributeValue(t: String, v: String): AttributeValue = {
     t match {
       case "string" =>
         new AttributeValue().withS(v)
@@ -120,5 +120,28 @@ object DynamoDBUtil {
       case "boolean" =>
         new AttributeValue().withBOOL(v.toBoolean)
     }
+  }
+
+  private def hoge[A](column: Column,
+                   value: Option[AttributeValue],
+                   f: (Column, A) => Unit)(implicit f1: Option[AttributeValue] => A): Unit =
+    f(column, f1(value))
+
+  implicit private def StringConvert(value: Option[AttributeValue]): String =
+    value.map(_.getS).getOrElse("")
+
+  implicit private def LongConvert(value: Option[AttributeValue]): Long =
+    value.map(_.getN.toLong).getOrElse(0L)
+
+  implicit private def DoubleConvert(value: Option[AttributeValue]): Double =
+    value.map(_.getN.toDouble).getOrElse(0D)
+
+  implicit private def BooleanConvert(value: Option[AttributeValue]): Boolean =
+    value.exists(_.getS.toBoolean)
+
+  implicit private def JsonConvert(value: Option[AttributeValue]): Value = {
+    value.map { attr =>
+      AttributeValueHelper.decodeToValue(attr)
+    }.getOrElse(ValueFactory.newNil())
   }
 }
