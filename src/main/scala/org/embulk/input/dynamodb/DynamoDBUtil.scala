@@ -7,6 +7,7 @@ import com.amazonaws.regions.Regions
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient
 import com.amazonaws.services.dynamodbv2.model.{AttributeValue, Condition, ScanRequest, ScanResult}
 import org.embulk.spi._
+import org.embulk.spi.`type`.Types
 import org.msgpack.value.{ValueFactory, Value}
 
 import scala.collection.JavaConversions._
@@ -62,16 +63,16 @@ object DynamoDBUtil {
       result.getItems.foreach { item =>
         schema.getColumns.foreach { column =>
           val value = item.asScala.get(column.getName)
-          column.getType.getName match {
-            case "string" =>
+          column.getType match {
+            case Types.STRING =>
               convert(column, value, pageBuilder.setString)
-            case "long" =>
+            case Types.LONG =>
               convert(column, value, pageBuilder.setLong)
-            case "double" =>
+            case Types.DOUBLE =>
               convert(column, value, pageBuilder.setDouble)
-            case "boolean" =>
+            case Types.BOOLEAN =>
               convert(column, value, pageBuilder.setBoolean)
-            case "json" | "map" | "list" | "set" =>
+            case Types.JSON =>
               convert(column, value, pageBuilder.setJson)
             case _ => /* Do nothing */
           }
