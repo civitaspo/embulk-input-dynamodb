@@ -9,7 +9,7 @@
 
 
 ## Configuration
-- **auth_method**: AWS Credential Type.
+- **auth_method**: AWS Credential Type.  
 Available values options are: `basic`, `env`, `instance`, `profile`, `properties`
   - **basic**: AWS access key and secret access key
   - **env**: Environment variables
@@ -27,7 +27,7 @@ Available values options are: `basic`, `env`, `instance`, `profile`, `properties
 - **record_limit**: Max Record Search limit (Long, optional) 
 - **columns**: a key-value pairs where key is a column name and value is options for the column (required)
   - **name**: Column name.
-  - **type**: Column values are converted to this embulk type.
+  - **type**: Column values are converted to this embulk type.  
   Available values options are: `boolean`, `long`, `double`, `string`, `json`
 - **filters**: query filter (optional)
 
@@ -46,7 +46,7 @@ in:
     - {name: ColumnB, type: double}
     - {name: ColumnC, type: string}
     - {name: ColumnD, type: boolean}
-    - {name: ColumnE, type: json}
+    - {name: ColumnE, type: json}  # DynamoDB Map, List and Set Column Type are json.
   filters:
     - {name: ColumnA, type: long, condition: BETWEEN, value: 10000, value2: 20000}
     - {name: ColumnC, type: string, condition: EQ, value: foobar}
