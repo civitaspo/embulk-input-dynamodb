@@ -1,15 +1,15 @@
 package org.embulk.input.dynamodb
 
 
+import java.io.File
 import java.{util => JUtil}
 
 import com.amazonaws.services.dynamodbv2.model.AttributeValue
-import com.amazonaws.util.json.JSONObject
 import com.fasterxml.jackson.databind.ObjectMapper
-import org.junit.Test
-import org.junit.Assert._
+import org.embulk.input.dynamodb.AttributeValueHelper._
 import org.hamcrest.CoreMatchers._
-import AttributeValueHelper._
+import org.junit.Assert._
+import org.junit.Test
 import org.msgpack.value.ValueFactory
 
 import scala.collection.JavaConverters._
@@ -137,115 +137,56 @@ class AttributeValueHelperTest {
     assertEquals(numberMap.asMapValue().map().get(ValueFactory.newString("KeyD")).asFloatValue().toDouble, -1234567890.123, 0.0)
   }
 
+  def attr[A](value: A)(implicit f: A=> AttributeValue): AttributeValue = f(value)
+  implicit def StringAttributeValue(value: String): AttributeValue   = new AttributeValue().withS(value)
+  implicit def IntegerAttributeValue(value: Int): AttributeValue     = new AttributeValue().withN(value.toString)
+  implicit def LongAttributeValue(value: Long): AttributeValue       = new AttributeValue().withN(value.toString)
+  implicit def FloatAttributeValue(value: Float): AttributeValue       = new AttributeValue().withN(value.toString)
+  implicit def DoubleAttributeValue(value: Double): AttributeValue       = new AttributeValue().withN(value.toString)
+  implicit def BooleanAttributeValue(value: Boolean): AttributeValue = new AttributeValue().withBOOL(value)
+  implicit def MapAttributeValue(value: Map[String, AttributeValue]): AttributeValue
+    = new AttributeValue().withM(value.asJava)
+  implicit def ListAttributeValue(value: List[AttributeValue]): AttributeValue
+    = new AttributeValue().withL(value.asJava)
+
   @Test
   def nestedDecodeTest(): Unit = {
-    val nestedList = decodeToValue(new AttributeValue().withL(
-      new JUtil.ArrayList[AttributeValue]() {
-        // Depth:0
-        add(new AttributeValue().withS("ValueA"))
-        add(new AttributeValue().withN("123"))
-        add(new AttributeValue().withL(
-          new JUtil.ArrayList[AttributeValue]() {
-            // Depth:1
-            add(new AttributeValue().withS("ValueB"))
-            add(new AttributeValue().withL(
-              new JUtil.ArrayList[AttributeValue]() {
-                // Depth:2A
-                add(new AttributeValue().withS("ValueC"))
-              }))
-            add(new AttributeValue().withM(
-              new JUtil.TreeMap[String, AttributeValue]() {
-                // Depth:2B
-                put("KeyA", new AttributeValue().withS("ValueD"))
-                put("KeyB", new AttributeValue().withS("ValueE"))
-              }
-            ))
-          }))
-        // Depth:0
-        add(new AttributeValue().withM(
-          new JUtil.TreeMap[String, AttributeValue]() {
-            // Depth:1
-            put("KeyC", new AttributeValue().withBOOL(true))
-            put("KeyD", new AttributeValue().withM(
-              new JUtil.TreeMap[String, AttributeValue]() {
-                // Depth:2
-                put("KeyE", new AttributeValue().withM(
-                  new JUtil.TreeMap[String, AttributeValue] {
-                    // Depth:3A
-                    put("KeyF", new AttributeValue().withN("456"))
-                    put("KeyG", new AttributeValue().withN("0.000456"))
-                  }))
-                put("KeyH", new AttributeValue().withM( {
-                  new JUtil.TreeMap[String, AttributeValue]() {
-                    // Depth:3B
-                    put("KeyI", new AttributeValue().withN("789"))
-                    put("KeyJ", new AttributeValue().withN("-0.000789"))
-                  }
-                }))
-                put("KeyK", new AttributeValue().withL(
-                  new JUtil.ArrayList[AttributeValue]() {
-                    // Depth:3C
-                    add(new AttributeValue().withS("ValueF"))
-                    add(new AttributeValue().withS("ValueG"))
-                  }))
-                put("KeyL", new AttributeValue().withSS(
-                  new JUtil.TreeSet[String]() {
-                    // Depth:3D
-                    add("ValueH")
-                    add("ValueI")
-                  }))
-                put("KeyM", new AttributeValue().withNS(
-                  new JUtil.TreeSet[String]() {
-                    // Depth:3E
-                    add("123.0")
-                    add("-456.789")
-                  }))
-              }))
-          }))
-      }))
+    // TODO: Json -> AttributeValue...
+    val testData = decodeToValue(attr(Map(
+      "_id"        -> attr("56d8e1377a72374918f73bd2"),
+      "index"      -> attr(0),
+      "guid"       -> attr("5309640c-499a-43f6-801d-3076c810892b"),
+      "isActive"   -> attr(true),
+      "age"        -> attr(37),
+      "name"       -> attr("Battle Lancaster"),
+      "email"      -> attr("battlelancaster@zytrac.com"),
+      "registered" -> attr("2014-07-16T04:40:58 -09:00"),
+      "latitude"   -> attr(45.574906),
+      "longitude"  -> attr(36.596302),
+      "tags"       -> attr(List(
+        attr("veniam"),
+        attr("exercitation"),
+        attr("velit"),
+        attr("pariatur"),
+        attr("sit"),
+        attr("non"),
+        attr("dolore"))),
+      "friends" -> attr(List(
+        attr(Map("id" -> attr(0), "name" -> attr("Mejia Montgomery"),
+          "tags" -> attr(List(attr("duis"), attr("proident"), attr("et"))))),
+        attr(Map("id" -> attr(1), "name" -> attr("Carpenter Reed"),
+          "tags" -> attr(List(attr("labore"), attr("nisi"), attr("ipsum"))))),
+        attr(Map("id" -> attr(2), "name" -> attr("Gamble Watts"),
+          "tags" -> attr(List(attr("occaecat"), attr("voluptate"), attr("eu")))))
+      ))
+      )
+    ))
 
-    assertThat(nestedList.asArrayValue().get(0).asStringValue().asString(), is("ValueA"))
-    assertThat(nestedList.asArrayValue().get(1).asNumberValue().toInt, is(123))
+    val testA = new ObjectMapper().readValue(
+      testData.toJson, classOf[JUtil.Map[String, Any]])
+    val testB = new ObjectMapper().readValue(
+      new File("src/test/resources/json/test.json"), classOf[JUtil.Map[String, Any]])
 
-    val item = new JUtil.ArrayList[Any]() {
-      add("ValueA")
-      add(123)
-      add(new JUtil.ArrayList[Any]() {
-        add("ValueB")
-        add(new JUtil.ArrayList[Any]() {
-          add("ValueC")
-        })
-        add(new JUtil.TreeMap[String, Any]() {
-          put("KeyA", "ValueD")
-          put("KeyB", "ValueE")
-        })
-      })
-      add(new JUtil.TreeMap[String, Any](){
-        put("KeyC", true)
-        put("KeyD", new JUtil.TreeMap[String, Any](){
-          put("KeyE", new JUtil.TreeMap[String, Any](){
-            put("KeyF", 456)
-            put("KeyG", 0.000456)
-          })
-          put("KeyH", new JUtil.TreeMap[String, Any](){
-            put("KeyF", 789)
-            put("KeyG", -0.000789)
-          })
-          put("KeyK", new JUtil.ArrayList[Any](){
-            add("ValueF")
-            add("ValueG")
-          })
-          put("KeyL", new JUtil.TreeSet[Any](){
-            add("ValueH")
-            add("ValueI")
-          })
-          put("KeyM", new JUtil.TreeSet[Any](){
-            add(-456.789)
-            add(123.0)
-          })
-        })
-      })
-    }
-    // compare
+    assertThat(testA, is(testB))
   }
 }

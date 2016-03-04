@@ -1,0 +1,50 @@
+{
+  "_id": "56d8e1377a72374918f73bd2",
+  "index": 0,
+  "guid": "5309640c-499a-43f6-801d-3076c810892b",
+  "isActive": true,
+  "age": 37,
+  "name": "Battle Lancaster",
+  "email": "battlelancaster@zytrac.com",
+  "registered": "2014-07-16T04:40:58 -09:00",
+  "latitude": 45.574906,
+  "longitude": 36.596302,
+  "tags": [
+    "veniam",
+    "exercitation",
+    "velit",
+    "pariatur",
+    "sit",
+    "non",
+    "dolore"
+  ],
+  "friends": [
+    {
+      "id": 0,
+      "name": "Mejia Montgomery",
+      "tags": [
+        "duis",
+        "proident",
+        "et"
+      ]
+    },
+    {
+      "id": 1,
+      "name": "Carpenter Reed",
+      "tags": [
+        "labore",
+        "nisi",
+        "ipsum"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "Gamble Watts",
+      "tags": [
+        "occaecat",
+        "voluptate",
+        "eu"
+      ]
+    }
+  ]
+}

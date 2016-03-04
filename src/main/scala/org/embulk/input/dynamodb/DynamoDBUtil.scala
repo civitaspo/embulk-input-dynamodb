@@ -64,15 +64,15 @@ object DynamoDBUtil {
           val value = item.asScala.get(column.getName)
           column.getType.getName match {
             case "string" =>
-              hoge(column, value, pageBuilder.setString)
+              convert(column, value, pageBuilder.setString)
             case "long" =>
-              hoge(column, value, pageBuilder.setLong)
+              convert(column, value, pageBuilder.setLong)
             case "double" =>
-              hoge(column, value, pageBuilder.setDouble)
+              convert(column, value, pageBuilder.setDouble)
             case "boolean" =>
-              hoge(column, value, pageBuilder.setBoolean)
+              convert(column, value, pageBuilder.setBoolean)
             case "json" =>
-              hoge(column, value, pageBuilder.setJson)
+              convert(column, value, pageBuilder.setJson)
             case _ => /* Do nothing */
           }
         }
@@ -122,7 +122,7 @@ object DynamoDBUtil {
     }
   }
 
-  private def hoge[A](column: Column,
+  private def convert[A](column: Column,
                    value: Option[AttributeValue],
                    f: (Column, A) => Unit)(implicit f1: Option[AttributeValue] => A): Unit =
     f(column, f1(value))

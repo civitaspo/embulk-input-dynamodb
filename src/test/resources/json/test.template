@@ -1,0 +1,27 @@
+{
+  _id: '{{objectId()}}',
+  index: '{{index()}}',
+  guid: '{{guid()}}',
+  isActive: '{{bool()}}',
+  age: '{{integer(20, 40)}}',
+  name: '{{firstName()}} {{surname()}}',
+  email: '{{email()}}',
+  registered: '{{date(new Date(2014, 0, 1), new Date(), "YYYY-MM-ddThh:mm:ss Z")}}',
+  latitude: '{{floating(-90.000001, 90)}}',
+  longitude: '{{floating(-180.000001, 180)}}',
+  tags: [
+    '{{repeat(7)}}',
+    '{{lorem(1, "words")}}'
+  ],
+  friends: [
+    '{{repeat(3)}}',
+    {
+      id: '{{index()}}',
+      name: '{{firstName()}} {{surname()}}',
+      tags: [
+        '{{repeat(3)}}',
+        '{{lorem(1, "words")}}'
+      ]
+    }
+  ]
+}
