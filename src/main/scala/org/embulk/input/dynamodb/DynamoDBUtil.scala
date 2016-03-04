@@ -71,7 +71,7 @@ object DynamoDBUtil {
               convert(column, value, pageBuilder.setDouble)
             case "boolean" =>
               convert(column, value, pageBuilder.setBoolean)
-            case "json" =>
+            case "json" | "map" | "list" | "set" =>
               convert(column, value, pageBuilder.setJson)
             case _ => /* Do nothing */
           }
