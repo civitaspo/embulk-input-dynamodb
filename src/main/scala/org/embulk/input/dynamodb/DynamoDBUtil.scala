@@ -6,20 +6,28 @@ import com.amazonaws.ClientConfiguration
 import com.amazonaws.regions.Regions
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient
 import com.amazonaws.services.dynamodbv2.model.{AttributeValue, Condition, ScanRequest, ScanResult}
+import org.embulk.config.ConfigException
 import org.embulk.spi._
 import org.embulk.spi.`type`.Types
-import org.msgpack.value.{ValueFactory, Value}
+import org.msgpack.value.{Value, ValueFactory}
 
 import scala.collection.JavaConversions._
 import scala.collection.JavaConverters._
 
 object DynamoDBUtil {
   def createClient(task: PluginTask): AmazonDynamoDBClient = {
-    new AmazonDynamoDBClient(
+    val client = new AmazonDynamoDBClient(
       AwsCredentials.getCredentialsProvider(task),
       new ClientConfiguration()
         .withMaxConnections(50))  // SDK Default Value
-      .withRegion(Regions.fromName(task.getRegion))
+
+    if (task.getEndPoint.isPresent) {
+      client.withEndpoint(task.getEndPoint.get())
+    } else if (task.getRegion.isPresent) {
+      client.withRegion(Regions.fromName(task.getRegion.get()))
+    } else {
+      throw new ConfigException("At least one of EndPoint or Region must be set")
+    }
   }
 
 

@@ -60,12 +60,4 @@ object AwsCredentials {
       }
     }
   }
-
-  private def require[A](value: Optional[A], message: String): A = {
-    if (value.isPresent) {
-      value.get()
-    } else {
-      throw new ConfigException("Required option is not set: " + message)
-    }
-  }
 }
