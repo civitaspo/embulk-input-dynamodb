@@ -146,7 +146,7 @@ object DynamoDBUtil {
     value.map(_.getN.toDouble).getOrElse(0D)
 
   implicit private def BooleanConvert(value: Option[AttributeValue]): Boolean =
-    value.exists(_.getS.toBoolean)
+    value.exists(_.getBOOL)
 
   implicit private def JsonConvert(value: Option[AttributeValue]): Value = {
     value.map { attr =>

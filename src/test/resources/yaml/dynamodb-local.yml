@@ -9,9 +9,9 @@ in:
     - {name: pri-key,     type: string}
     - {name: sort-key,    type: long}
     - {name: doubleValue, type: double}
-    #- {name: boolValue,   type: boolean}
-    #- {name: listValue,   type: json}
-    #- {name: mapValue,    type: json}
+    - {name: boolValue,   type: boolean}
+    - {name: listValue,   type: json}
+    - {name: mapValue,    type: json}
 
 out:
   type: file

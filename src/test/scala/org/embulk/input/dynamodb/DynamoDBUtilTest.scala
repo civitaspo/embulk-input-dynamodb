@@ -43,7 +43,7 @@ class DynamoDBUtilTest {
     val lines = Files.readAllLines(fs.getPath("dynamodb-local-result000.00.tsv"), Charset.forName("UTF-8"))
     println(lines)
     assertEquals(lines.size, 1)
-    assertEquals("key-1\t0\t42.195\ttrue\t", lines.get(0))
+    assertEquals("key-1\t0\t42.195\ttrue\t\"[\"\"list-value\"\",123]\"\t\"{\"\"map-key-2\"\":456,\"\"map-key-1\"\":\"\"map-value-1\"\"}\"", lines.get(0))
   }
 
   @Test
