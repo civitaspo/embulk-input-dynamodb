@@ -20,5 +20,6 @@ aws dynamodb put-item \
 			}
 		}
 	}' \
-	--endpoint-url http://localhost:8000
+	--endpoint-url http://localhost:8000 \
+	--region us-east-1
 

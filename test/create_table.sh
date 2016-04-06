@@ -11,4 +11,6 @@ aws dynamodb create-table \
 		{"AttributeName":"sort-key","KeyType":"RANGE"}
 	]' \
 	--provisioned-throughput='{"ReadCapacityUnits":5, "WriteCapacityUnits":5}' \
-	--endpoint-url http://localhost:8000
+	--endpoint-url http://localhost:8000 \
+	--region us-east-1
+
