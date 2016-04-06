@@ -4,11 +4,13 @@ import java.io.File
 import java.nio.charset.Charset
 import java.nio.file.{FileSystems, Files}
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.google.inject.{Binder, Module}
 import org.embulk.EmbulkEmbed
 import org.embulk.config.ConfigSource
 import org.embulk.plugin.InjectedPluginSource
 import org.embulk.spi.InputPlugin
+import org.hamcrest.CoreMatchers._
 import org.junit.Assert._
 import org.junit.{Before, Test}
 
@@ -16,6 +18,7 @@ class DynamoDBUtilTest {
   private var embulk: EmbulkEmbed = null
 
   private var EMBULK_DYNAMODB_TEST_TABLE: String = null
+  private var mapper: ObjectMapper = null
 
   @Before
   def createResources() {
@@ -33,6 +36,8 @@ class DynamoDBUtilTest {
     })
 
     embulk = bootstrap.initializeCloseable()
+
+    mapper = new ObjectMapper()
   }
 
 
@@ -41,9 +46,26 @@ class DynamoDBUtilTest {
 
     val fs = FileSystems.getDefault
     val lines = Files.readAllLines(fs.getPath("dynamodb-local-result000.00.tsv"), Charset.forName("UTF-8"))
-    println(lines)
     assertEquals(lines.size, 1)
-    assertEquals("key-1\t0\t42.195\ttrue\t\"[\"\"list-value\"\",123]\"\t\"{\"\"map-key-2\"\":456,\"\"map-key-1\"\":\"\"map-value-1\"\"}\"", lines.get(0))
+
+    val head = lines.get(0)
+    val values = head.split("\t")
+
+    assertThat(values(0), is("key-1"))
+    assertThat(values(1), is("0"))
+    assertThat(values(2), is("42.195"))
+    assertThat(values(3), is("true"))
+
+    val listValue = mapper.readValue(values(4).replaceAll("\"(?!\")", ""), classOf[java.util.List[Object]])
+    assertThat(listValue.size(), is(2))
+    assertThat(listValue.get(0).asInstanceOf[String], is("list-value"))
+    assertThat(listValue.get(1).asInstanceOf[Int], is(123))
+
+    val mapValue = mapper.readValue(values(5).replaceAll("\"(?!\")", ""), classOf[java.util.Map[String, Object]])
+    assert(mapValue.containsKey("map-key-1"))
+    assertThat(mapValue.get("map-key-1").asInstanceOf[String], is("map-value-1"))
+    assert(mapValue.containsKey("map-key-2"))
+    assertThat(mapValue.get("map-key-2").asInstanceOf[Int], is(456))
   }
 
   @Test
