@@ -40,8 +40,10 @@ class DynamoDBUtilTest {
     embulk.run(config)
 
     val fs = FileSystems.getDefault
-    val lines = Files.readAllLines(fs.getPath("result000.00.tsv"), Charset.forName("UTF-8"))
-    assertEquals("KEY-1\t1\tHogeHoge", lines.get(0))
+    val lines = Files.readAllLines(fs.getPath("dynamodb-local-result000.00.tsv"), Charset.forName("UTF-8"))
+    println(lines)
+    assertEquals(lines.size, 1)
+    assertEquals("key-1\t0\t42.195\ttrue\t", lines.get(0))
   }
 
   @Test
