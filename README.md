@@ -21,7 +21,9 @@ Available values options are: `basic`, `env`, `instance`, `profile`, `properties
   - **secret_key**: AWS secret key (string, required)
 - If **auth_method** is set `profile`
   - **profile_name**: The name of a local configuration profile (string, optional)
-- **region**: Region Name (string, default: ap-northeast-1)
+- **region**: Region Name (string, optional)
+- **end_point**: EndPoint URL (string, optional)  
+`end_point` has priority when `region` and `end_point` are specified.
 - **table**: Table Name (string, required)
 - **scan_limit**: DynamoDB 1time Scan Query size limit (Int, optional) 
 - **record_limit**: Max Record Search limit (Long, optional) 
@@ -53,6 +55,13 @@ in:
 
 out:
   type: stdout
+```
+
+## Try
+
+```
+$ ./gradlew classpath
+$ embulk preview -I lib your-sample.yml
 ```
 
 ## Build

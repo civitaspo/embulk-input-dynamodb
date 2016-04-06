@@ -22,8 +22,12 @@ trait PluginTask extends Task {
   def getProfileName: Optional[String]
 
   @Config("region")
-  @ConfigDefault("ap-northeast-1")
-  def getRegion: String
+  @ConfigDefault("null")
+  def getRegion: Optional[String]
+
+  @Config("end_point")
+  @ConfigDefault("null")
+  def getEndPoint: Optional[String]
 
   @Config("scan_limit")
   @ConfigDefault("0")

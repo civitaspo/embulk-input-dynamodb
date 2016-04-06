@@ -6,20 +6,27 @@ import com.amazonaws.ClientConfiguration
 import com.amazonaws.regions.Regions
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient
 import com.amazonaws.services.dynamodbv2.model.{AttributeValue, Condition, ScanRequest, ScanResult}
+import org.embulk.config.ConfigException
 import org.embulk.spi._
 import org.embulk.spi.`type`.Types
-import org.msgpack.value.{ValueFactory, Value}
+import org.msgpack.value.{Value, ValueFactory}
 
-import scala.collection.JavaConversions._
 import scala.collection.JavaConverters._
 
 object DynamoDBUtil {
   def createClient(task: PluginTask): AmazonDynamoDBClient = {
-    new AmazonDynamoDBClient(
+    val client = new AmazonDynamoDBClient(
       AwsCredentials.getCredentialsProvider(task),
       new ClientConfiguration()
         .withMaxConnections(50))  // SDK Default Value
-      .withRegion(Regions.fromName(task.getRegion))
+
+    if (task.getEndPoint.isPresent) {
+      client.withEndpoint(task.getEndPoint.get())
+    } else if (task.getRegion.isPresent) {
+      client.withRegion(Regions.fromName(task.getRegion.get()))
+    } else {
+      throw new ConfigException("At least one of EndPoint or Region must be set")
+    }
   }
 
 
@@ -34,10 +41,10 @@ object DynamoDBUtil {
 
     val attributes: JList[String] = new JArrayList[String]()
 
-    schema.getColumns.foreach { column =>
+    schema.getColumns.asScala.foreach { column =>
       attributes.add(column.getName)
     }
-    val scanFilter: JMap[String, Condition] = createScanFilter(task)
+    val scanFilter: JMap[String, Condition] = createScanFilter(task).asJava
     var evaluateKey: JMap[String, AttributeValue] = null
 
     val scanLimit: Long   = task.getScanLimit
@@ -60,8 +67,8 @@ object DynamoDBUtil {
       val result: ScanResult = client.scan(request)
       evaluateKey = result.getLastEvaluatedKey
 
-      result.getItems.foreach { item =>
-        schema.getColumns.foreach { column =>
+      result.getItems.asScala.foreach { item =>
+        schema.getColumns.asScala.foreach { column =>
           val value = item.asScala.get(column.getName)
           column.getType match {
             case Types.STRING =>
@@ -97,7 +104,7 @@ object DynamoDBUtil {
     val filterMap = collection.mutable.HashMap[String, Condition]()
 
     Option(task.getFilters.orNull).map { filters =>
-      filters.getFilters.map { filter =>
+      filters.getFilters.asScala.map { filter =>
         val attributeValueList = collection.mutable.ArrayBuffer[AttributeValue]()
         attributeValueList += createAttributeValue(filter.getType, filter.getValue)
         Option(filter.getValue2).map { value2 =>
@@ -105,7 +112,7 @@ object DynamoDBUtil {
 
         filterMap += filter.getName -> new Condition()
           .withComparisonOperator(filter.getCondition)
-          .withAttributeValueList(attributeValueList)
+          .withAttributeValueList(attributeValueList.asJava)
       }
     }
 
@@ -138,7 +145,7 @@ object DynamoDBUtil {
     value.map(_.getN.toDouble).getOrElse(0D)
 
   implicit private def BooleanConvert(value: Option[AttributeValue]): Boolean =
-    value.exists(_.getS.toBoolean)
+    value.exists(_.getBOOL)
 
   implicit private def JsonConvert(value: Option[AttributeValue]): Value = {
     value.map { attr =>

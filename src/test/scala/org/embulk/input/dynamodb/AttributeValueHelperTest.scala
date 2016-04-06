@@ -138,12 +138,18 @@ class AttributeValueHelperTest {
   }
 
   def attr[A](value: A)(implicit f: A=> AttributeValue): AttributeValue = f(value)
-  implicit def StringAttributeValue(value: String): AttributeValue   = new AttributeValue().withS(value)
-  implicit def IntegerAttributeValue(value: Int): AttributeValue     = new AttributeValue().withN(value.toString)
-  implicit def LongAttributeValue(value: Long): AttributeValue       = new AttributeValue().withN(value.toString)
-  implicit def FloatAttributeValue(value: Float): AttributeValue       = new AttributeValue().withN(value.toString)
-  implicit def DoubleAttributeValue(value: Double): AttributeValue       = new AttributeValue().withN(value.toString)
-  implicit def BooleanAttributeValue(value: Boolean): AttributeValue = new AttributeValue().withBOOL(value)
+  implicit def StringAttributeValue(value: String): AttributeValue
+    = new AttributeValue().withS(value)
+  implicit def IntegerAttributeValue(value: Int): AttributeValue
+    = new AttributeValue().withN(value.toString)
+  implicit def LongAttributeValue(value: Long): AttributeValue
+    = new AttributeValue().withN(value.toString)
+  implicit def FloatAttributeValue(value: Float): AttributeValue
+    = new AttributeValue().withN(value.toString)
+  implicit def DoubleAttributeValue(value: Double): AttributeValue
+    = new AttributeValue().withN(value.toString)
+  implicit def BooleanAttributeValue(value: Boolean): AttributeValue
+    = new AttributeValue().withBOOL(value)
   implicit def MapAttributeValue(value: Map[String, AttributeValue]): AttributeValue
     = new AttributeValue().withM(value.asJava)
   implicit def ListAttributeValue(value: List[AttributeValue]): AttributeValue
