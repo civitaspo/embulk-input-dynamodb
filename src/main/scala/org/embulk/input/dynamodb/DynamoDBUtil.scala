@@ -11,7 +11,6 @@ import org.embulk.spi._
 import org.embulk.spi.`type`.Types
 import org.msgpack.value.{Value, ValueFactory}
 
-import scala.collection.JavaConversions._
 import scala.collection.JavaConverters._
 
 object DynamoDBUtil {
@@ -42,10 +41,10 @@ object DynamoDBUtil {
 
     val attributes: JList[String] = new JArrayList[String]()
 
-    schema.getColumns.foreach { column =>
+    schema.getColumns.asScala.foreach { column =>
       attributes.add(column.getName)
     }
-    val scanFilter: JMap[String, Condition] = createScanFilter(task)
+    val scanFilter: JMap[String, Condition] = createScanFilter(task).asJava
     var evaluateKey: JMap[String, AttributeValue] = null
 
     val scanLimit: Long   = task.getScanLimit
@@ -68,8 +67,8 @@ object DynamoDBUtil {
       val result: ScanResult = client.scan(request)
       evaluateKey = result.getLastEvaluatedKey
 
-      result.getItems.foreach { item =>
-        schema.getColumns.foreach { column =>
+      result.getItems.asScala.foreach { item =>
+        schema.getColumns.asScala.foreach { column =>
           val value = item.asScala.get(column.getName)
           column.getType match {
             case Types.STRING =>
@@ -105,7 +104,7 @@ object DynamoDBUtil {
     val filterMap = collection.mutable.HashMap[String, Condition]()
 
     Option(task.getFilters.orNull).map { filters =>
-      filters.getFilters.map { filter =>
+      filters.getFilters.asScala.map { filter =>
         val attributeValueList = collection.mutable.ArrayBuffer[AttributeValue]()
         attributeValueList += createAttributeValue(filter.getType, filter.getValue)
         Option(filter.getValue2).map { value2 =>
@@ -113,7 +112,7 @@ object DynamoDBUtil {
 
         filterMap += filter.getName -> new Condition()
           .withComparisonOperator(filter.getCondition)
-          .withAttributeValueList(attributeValueList)
+          .withAttributeValueList(attributeValueList.asJava)
       }
     }
 
