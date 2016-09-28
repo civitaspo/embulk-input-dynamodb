@@ -22,14 +22,14 @@ targetCompatibility = 1.7
 dependencies {
     compile "org.scala-lang:scala-library:2.11.7"
 
-    compile  "org.embulk:embulk-core:0.8.6"
-    provided "org.embulk:embulk-core:0.8.6"
+    compile  "org.embulk:embulk-core:0.8.13"
+    provided "org.embulk:embulk-core:0.8.13"
 
     compile "com.amazonaws:aws-java-sdk-dynamodb:1.10.43"
 
     testCompile "junit:junit:4.+"
-    testCompile "org.embulk:embulk-standards:0.8.6"
-    testCompile "org.embulk:embulk-core:0.8.6:tests"
+    testCompile "org.embulk:embulk-standards:0.8.13"
+    testCompile "org.embulk:embulk-core:0.8.13:tests"
 }
 
 compileScala {
