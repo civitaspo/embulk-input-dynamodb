@@ -1,7 +1,6 @@
 #!/bin/sh
 
-docker run -d \
+docker run -i -t -d \
 	-p 8000:8000 \
-	-v $PWD/dynamodb-local:/data \
-	--env DYNAMO_OPT='-dbPath /data -sharedDb' \
-	lulichn/dynamodb-local
+	tray/dynamodb-local -inMemory -port 8000
+
