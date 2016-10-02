@@ -24,12 +24,12 @@ Available values options are: `basic`, `env`, `instance`, `profile`, `properties
 - **region**: Region Name (string, optional)
 - **end_point**: EndPoint URL (string, optional)  
 `end_point` has priority when `region` and `end_point` are specified.
-- **operation**: Operation Type (string, required)
+- **operation**: Operation Type (string, required)  
 Available types are: `scan`, `query`
 - **table**: Table Name (string, required)
 - **limit**: DynamoDB 1-time Scan/Query Operation size limit (Int, optional)
-- **scan_limit**: DynamoDB 1time Scan Query size limit (Int, optional)
-- **record_limit**: Max Record Search limit (Deprecated, Long, optional)
+- **scan_limit**: DynamoDB 1time Scan Query size limit (Deprecated, Int, optional)
+- **record_limit**: Max Record Search limit (Long, optional)
 - **columns**: a key-value pairs where key is a column name and value is options for the column (required)
   - **name**: Column name.
   - **type**: Column values are converted to this embulk type.  
