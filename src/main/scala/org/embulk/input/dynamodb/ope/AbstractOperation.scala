@@ -3,6 +3,7 @@ package org.embulk.input.dynamodb.ope
 import com.amazonaws.services.dynamodbv2.model.{AttributeValue, Condition}
 import org.embulk.input.dynamodb.{AttributeValueHelper, PluginTask}
 import org.embulk.spi._
+import org.embulk.spi.`type`.Types
 import org.msgpack.value.{Value, ValueFactory}
 
 import scala.collection.JavaConverters._
@@ -10,15 +11,15 @@ import scala.collection.JavaConverters._
 abstract class AbstractOperation {
   def execute(task: PluginTask, schema: Schema, output: PageOutput): Unit
 
-  def getScanLimit(scanLimit: Long, recordLimit: Long, recordCount: Long): Int = {
-    if (scanLimit > 0 && recordLimit > 0) {
-      math.min(scanLimit, recordLimit - recordCount).toInt
-    } else if (scanLimit > 0 || recordLimit > 0) {
-      math.max(scanLimit, recordLimit).toInt
+  def getLimit(limit: Long, recordLimit: Long, recordCount: Long): Int = {
+    if (limit > 0 && recordLimit > 0) {
+      math.min(limit, recordLimit - recordCount).toInt
+    } else if (limit > 0 || recordLimit > 0) {
+      math.max(limit, recordLimit).toInt
     } else { 0 }
   }
 
-  def createScanFilter(task: PluginTask): Map[String, Condition] = {
+  def createFilters(task: PluginTask): Map[String, Condition] = {
     val filterMap = collection.mutable.HashMap[String, Condition]()
 
     Option(task.getFilters.orNull).map { filters =>
@@ -46,6 +47,33 @@ abstract class AbstractOperation {
       case "boolean" =>
         new AttributeValue().withBOOL(v.toBoolean)
     }
+  }
+
+  def write(pageBuilder: PageBuilder, schema: Schema, items: Seq[Map[String, AttributeValue]]): Long = {
+    var count = 0
+
+    items.foreach { item =>
+      schema.getColumns.asScala.foreach { column =>
+        val value = item.get(column.getName)
+        column.getType match {
+          case Types.STRING =>
+            convert(column, value, pageBuilder.setString)
+          case Types.LONG =>
+            convert(column, value, pageBuilder.setLong)
+          case Types.DOUBLE =>
+            convert(column, value, pageBuilder.setDouble)
+          case Types.BOOLEAN =>
+            convert(column, value, pageBuilder.setBoolean)
+          case Types.JSON =>
+            convert(column, value, pageBuilder.setJson)
+          case _ => /* Do nothing */
+        }
+      }
+      pageBuilder.addRecord()
+      count += 1
+    }
+
+    count
   }
 
   def convert[A](column: Column,

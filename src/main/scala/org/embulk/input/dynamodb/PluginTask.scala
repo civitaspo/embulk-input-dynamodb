@@ -32,6 +32,10 @@ trait PluginTask extends Task {
   @Config("operation")
   def getOperation: String
 
+  @Config("limit")
+  @ConfigDefault("0")
+  def getLimit: Long
+
   @Config("scan_limit")
   @ConfigDefault("0")
   def getScanLimit: Long
