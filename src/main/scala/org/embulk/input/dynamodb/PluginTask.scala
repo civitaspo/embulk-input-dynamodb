@@ -29,6 +29,9 @@ trait PluginTask extends Task {
   @ConfigDefault("null")
   def getEndPoint: Optional[String]
 
+  @Config("operation")
+  def getOperation: String
+
   @Config("scan_limit")
   @ConfigDefault("0")
   def getScanLimit: Long

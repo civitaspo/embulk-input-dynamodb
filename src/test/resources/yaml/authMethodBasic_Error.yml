@@ -1,6 +1,7 @@
 in:
   type: dynamodb
   region: ENV_VAR
+  operation: scan
   table: ENV_VAR
   auth_method: basic
   columns:

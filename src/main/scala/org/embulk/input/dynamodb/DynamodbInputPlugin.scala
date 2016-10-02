@@ -4,6 +4,7 @@ import java.util.{List => JList}
 
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient
 import org.embulk.config._
+import org.embulk.input.dynamodb.ope.ScanOperation
 import org.embulk.spi._
 
 class DynamodbInputPlugin extends InputPlugin {
@@ -24,8 +25,12 @@ class DynamodbInputPlugin extends InputPlugin {
   def run(taskSource: TaskSource, schema: Schema, taskIndex: Int, output: PageOutput): TaskReport = {
     val task: PluginTask = taskSource.loadTask(classOf[PluginTask])
 
-    implicit val client: AmazonDynamoDBClient = DynamoDBUtil.createClient(task)
-    DynamoDBUtil.scan(task, schema, output)
+    val client: AmazonDynamoDBClient = DynamoDBClient.create(task)
+
+    val ope = task.getOperation.toLowerCase match {
+      case "scan" => new ScanOperation(client)
+    }
+    ope.execute(task, schema, output)
 
     Exec.newTaskReport()
   }

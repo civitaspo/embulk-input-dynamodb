@@ -1,6 +1,7 @@
 in:
   type: dynamodb
   region: ENV_VAR
+  operation: scan
   table: ENV_VAR
   access_key: ENV_VAR
   secret_key: ENV_VAR
