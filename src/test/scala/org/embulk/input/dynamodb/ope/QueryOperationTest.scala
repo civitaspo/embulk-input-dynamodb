@@ -1,4 +1,4 @@
-package org.embulk.input.dynamodb
+package org.embulk.input.dynamodb.ope
 
 import java.io.File
 import java.nio.charset.Charset
@@ -8,13 +8,14 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.google.inject.{Binder, Module}
 import org.embulk.EmbulkEmbed
 import org.embulk.config.ConfigSource
+import org.embulk.input.dynamodb.DynamodbInputPlugin
 import org.embulk.plugin.InjectedPluginSource
 import org.embulk.spi.InputPlugin
 import org.hamcrest.CoreMatchers._
 import org.junit.Assert._
 import org.junit.{Before, Test}
 
-class DynamoDBUtilTest {
+class QueryOperationTest {
   private var embulk: EmbulkEmbed = null
 
   private var EMBULK_DYNAMODB_TEST_TABLE: String = null
@@ -69,11 +70,12 @@ class DynamoDBUtilTest {
   }
 
   @Test
-  def scanTest() {
+  def queryTest() {
     val config = embulk.newConfigLoader().fromYamlFile(
-      new File("src/test/resources/yaml/dynamodb-local.yml"))
+      new File("src/test/resources/yaml/dynamodb-local-query.yml"))
 
     config.getNested("in")
+      .set("operation", "query")
       .set("table", EMBULK_DYNAMODB_TEST_TABLE)
 
     doTest(config)

@@ -27,16 +27,23 @@ Available values options are: `basic`, `env`, `instance`, `profile`, `properties
 - **operation**: Operation Type (string, required)  
 Available types are: `scan`, `query`
 - **table**: Table Name (string, required)
+- **filters**: Query Filters  
+Required to `query` operation. Optional for `scan`.  
+  - **name**: Column name.
+  - **type**: Column type.
+  - **condition**: Comparison Operator.
+  - **value(s)**: Attribute Value(s).
 - **limit**: DynamoDB 1-time Scan/Query Operation size limit (Int, optional)
-- **scan_limit**: DynamoDB 1time Scan Query size limit (Deprecated, Int, optional)
+- **scan_limit**: DynamoDB 1-time Scan Query size limit (Deprecated, Int, optional)
 - **record_limit**: Max Record Search limit (Long, optional)
 - **columns**: a key-value pairs where key is a column name and value is options for the column (required)
   - **name**: Column name.
   - **type**: Column values are converted to this embulk type.  
   Available values options are: `boolean`, `long`, `double`, `string`, `json`
-- **filters**: query filter (optional)
 
 ## Example
+
+- Scan Operation
 
 ```yaml
 in:
@@ -45,6 +52,7 @@ in:
   access_key: YOUR_ACCESS_KEY
   secret_key: YOUR_SECRET_KEY
   region: ap-northeast-1
+  operation: scan
   table: YOUR_TABLE_NAME
   columns:
     - {name: ColumnA, type: long}
@@ -60,11 +68,33 @@ out:
   type: stdout
 ```
 
+- Query Operation
+
+```yaml
+in:
+  type: dynamodb
+  auth_method: env
+  region: ap-northeast-1
+  operation: query
+  table: YOUR_TABLE_NAME
+  columns:
+    - {name: ColumnA, type: long}
+    - {name: ColumnB, type: double}
+    - {name: ColumnC, type: string}
+    - {name: ColumnD, type: boolean}
+    - {name: ColumnE, type: json}
+  filters:
+    - {name: ColumnA, type: long, condition: EQ, value: 10000}
+
+out:
+  type: stdout
+```
+
 ## Try
 
 ```
 $ ./gradlew classpath
-$ embulk preview -I lib your-sample.yml
+$ embulk preview -I lib your-config.yml
 ```
 
 ## Build

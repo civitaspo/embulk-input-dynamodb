@@ -1,0 +1,23 @@
+in:
+  type: dynamodb
+  end_point: http://localhost:8000/
+  table: ENV_VAR
+  auth_method: basic
+  access_key: dummy
+  secret_key: dummy
+  columns:
+    - {name: pri-key,     type: string}
+    - {name: sort-key,    type: long}
+    - {name: doubleValue, type: double}
+    - {name: boolValue,   type: boolean}
+    - {name: listValue,   type: json}
+    - {name: mapValue,    type: json}
+
+out:
+  type: file
+  path_prefix: dynamodb-local-result
+  file_ext: tsv
+  formatter:
+    type: csv
+    delimiter: "\t"
+    header_line: false

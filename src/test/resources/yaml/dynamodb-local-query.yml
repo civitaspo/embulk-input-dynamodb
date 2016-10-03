@@ -1,11 +1,12 @@
 in:
   type: dynamodb
   end_point: http://localhost:8000/
-  operation: scan
   table: ENV_VAR
   auth_method: basic
   access_key: dummy
   secret_key: dummy
+  filters:
+    - {name: pri-key, type: string, condition: EQ, value: key-1}
   columns:
     - {name: pri-key,     type: string}
     - {name: sort-key,    type: long}
