@@ -16,11 +16,11 @@ configurations {
 
 version = "0.2.0"
 
-sourceCompatibility = 1.7
-targetCompatibility = 1.7
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
 
 dependencies {
-    compile "org.scala-lang:scala-library:2.11.8"
+    compile "org.scala-lang:scala-library:2.13.1"
 
     compile  "org.embulk:embulk-core:0.8.13"
     provided "org.embulk:embulk-core:0.8.13"

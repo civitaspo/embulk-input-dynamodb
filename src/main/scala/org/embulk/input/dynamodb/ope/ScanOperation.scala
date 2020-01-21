@@ -42,7 +42,7 @@ class ScanOperation(client: AmazonDynamoDBClient) extends AbstractOperation {
       val result: ScanResult = client.scan(request)
       evaluateKey = result.getLastEvaluatedKey
 
-      val items = result.getItems.asScala.map(_.asScala.toMap)
+      val items = result.getItems.asScala.map(_.asScala.toMap).toSeq
       recordCount += write(pageBuilder, schema, items)
     } while(evaluateKey != null && (recordLimit == 0 || recordLimit > recordCount))
 
