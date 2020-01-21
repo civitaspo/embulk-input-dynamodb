@@ -7,7 +7,7 @@ import com.amazonaws.services.dynamodbv2.model.{AttributeValue, Condition, Query
 import org.embulk.input.dynamodb.PluginTask
 import org.embulk.spi.{BufferAllocator, PageBuilder, PageOutput, Schema}
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 class QueryOperation(client: AmazonDynamoDBClient) extends AbstractOperation {
   override def execute(task: PluginTask,
