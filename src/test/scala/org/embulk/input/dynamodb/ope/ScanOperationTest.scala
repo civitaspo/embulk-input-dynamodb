@@ -12,6 +12,7 @@ import org.embulk.input.dynamodb.DynamodbInputPlugin
 import org.embulk.plugin.InjectedPluginSource
 import org.embulk.spi.InputPlugin
 import org.hamcrest.CoreMatchers._
+import org.hamcrest.MatcherAssert.assertThat
 import org.junit.Assert._
 import org.junit.{Before, Test}
 
