@@ -34,7 +34,7 @@ object AwsCredentials {
           new EnvironmentVariableCredentialsProvider().getCredentials
 
         case "instance" =>
-          new InstanceProfileCredentialsProvider().getCredentials
+          InstanceProfileCredentialsProvider.getInstance().getCredentials
 
         case "profile" =>
           val profileName = task.getProfileName.or("default")
