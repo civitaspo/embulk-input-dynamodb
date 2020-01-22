@@ -22,22 +22,16 @@ targetCompatibility = 1.8
 dependencies {
     compile "org.scala-lang:scala-library:2.13.1"
 
-    compile  "org.embulk:embulk-core:0.8.13"
-    provided "org.embulk:embulk-core:0.8.13"
+    compile  "org.embulk:embulk-core:0.9.23"
+    provided "org.embulk:embulk-core:0.9.23"
 
     compile "com.amazonaws:aws-java-sdk-dynamodb:1.11.711"
 
-    // NOTE: Hack Codes until all dependencies are updeted.
-    // ref. https://github.com/embulk/embulk/blob/v0.8.13/embulk-core/build.gradle#L20
-    compile "com.google.guava:guava:18.0"
-    // ref. https://github.com/embulk/embulk/blob/v0.8.13/embulk-core/build.gradle#L41
-    compile "org.msgpack:msgpack-core:0.8.8"
-    // ref. https://github.com/embulk/embulk/blob/v0.8.13/embulk-core/build.gradle#L21
-    testCompile 'com.google.inject:guice:4.0'
-
     testCompile "junit:junit:4.+"
-    testCompile "org.embulk:embulk-standards:0.8.13"
-    testCompile "org.embulk:embulk-core:0.8.13:tests"
+    testCompile "org.embulk:embulk-standards:0.9.23"
+    testCompile "org.embulk:embulk-deps-buffer:0.9.23"
+    testCompile "org.embulk:embulk-deps-config:0.9.23"
+    testCompile "org.embulk:embulk-core:0.9.23:tests"
 }
 
 compileScala {
