@@ -22,7 +22,7 @@ class QueryOperationTest {
   private var mapper: ObjectMapper = null
 
   @Before
-  def createResources() {
+  def createResources(): Unit = {
     // Get Environments
     EMBULK_DYNAMODB_TEST_TABLE = System.getenv("EMBULK_DYNAMODB_TEST_TABLE")
 
@@ -42,7 +42,7 @@ class QueryOperationTest {
   }
 
 
-  def doTest(config: ConfigSource) {
+  def doTest(config: ConfigSource): Unit = {
     embulk.run(config)
 
     val fs = FileSystems.getDefault
@@ -70,7 +70,7 @@ class QueryOperationTest {
   }
 
   @Test
-  def queryTest() {
+  def queryTest(): Unit = {
     val config = embulk.newConfigLoader().fromYamlFile(
       new File("src/test/resources/yaml/dynamodb-local-query.yml"))
 

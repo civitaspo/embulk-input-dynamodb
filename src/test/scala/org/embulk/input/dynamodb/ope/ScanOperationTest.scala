@@ -22,7 +22,7 @@ class ScanOperationTest {
   private var mapper: ObjectMapper = null
 
   @Before
-  def createResources() {
+  def createResources(): Unit = {
     // Get Environments
     EMBULK_DYNAMODB_TEST_TABLE = System.getenv("EMBULK_DYNAMODB_TEST_TABLE")
 
@@ -42,7 +42,7 @@ class ScanOperationTest {
   }
 
 
-  def doTest(config: ConfigSource) {
+  def doTest(config: ConfigSource): Unit = {
     embulk.run(config)
 
     val fs = FileSystems.getDefault
@@ -70,7 +70,7 @@ class ScanOperationTest {
   }
 
   @Test
-  def scanTest() {
+  def scanTest(): Unit = {
     val config = embulk.newConfigLoader().fromYamlFile(
       new File("src/test/resources/yaml/dynamodb-local-scan.yml"))
 

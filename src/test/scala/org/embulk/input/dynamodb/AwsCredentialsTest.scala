@@ -26,7 +26,7 @@ class AwsCredentialsTest {
   def runtime: EmbulkTestRuntime = new EmbulkTestRuntime
 
   @Before
-  def createResources() {
+  def createResources(): Unit = {
     // Get Environments
     EMBULK_DYNAMODB_TEST_REGION = System.getenv("EMBULK_DYNAMODB_TEST_REGION")
     EMBULK_DYNAMODB_TEST_TABLE = System.getenv("EMBULK_DYNAMODB_TEST_TABLE")
@@ -47,7 +47,7 @@ class AwsCredentialsTest {
     embulk = bootstrap.initializeCloseable()
   }
 
-  def doTest(config: ConfigSource) {
+  def doTest(config: ConfigSource): Unit = {
     embulk.run(config)
 
     val fs = FileSystems.getDefault
@@ -56,7 +56,7 @@ class AwsCredentialsTest {
   }
 
   @Test
-  def notSetAuthMethod_SetCredentials() {
+  def notSetAuthMethod_SetCredentials(): Unit = {
     val config = embulk.newConfigLoader().fromYamlFile(
       new File("src/test/resources/yaml/notSetAuthMethod.yml"))
 
@@ -70,7 +70,7 @@ class AwsCredentialsTest {
   }
 
   @Test
-  def setAuthMethod_Basic() {
+  def setAuthMethod_Basic(): Unit = {
     val config = embulk.newConfigLoader().fromYamlFile(
       new File("src/test/resources/yaml/authMethodBasic.yml"))
 
@@ -84,7 +84,7 @@ class AwsCredentialsTest {
   }
 
   @Test(expected = classOf[PartialExecutionException])
-  def setAuthMethod_Basic_NotSet() {
+  def setAuthMethod_Basic_NotSet(): Unit = {
     val config = embulk.newConfigLoader().fromYamlFile(
       new File("src/test/resources/yaml/authMethodBasic_Error.yml"))
 
@@ -96,7 +96,7 @@ class AwsCredentialsTest {
   }
 
   @Test
-  def setAuthMethod_Env() {
+  def setAuthMethod_Env(): Unit = {
     val config = embulk.newConfigLoader().fromYamlFile(
       new File("src/test/resources/yaml/authMethodEnv.yml"))
 
@@ -108,7 +108,7 @@ class AwsCredentialsTest {
   }
 
   @Test
-  def setAuthMethod_Profile() {
+  def setAuthMethod_Profile(): Unit = {
     val config = embulk.newConfigLoader().fromYamlFile(
       new File("src/test/resources/yaml/authMethodProfile.yml"))
 
@@ -121,7 +121,7 @@ class AwsCredentialsTest {
   }
 
   @Test(expected = classOf[PartialExecutionException])
-  def setAuthMethod_Profile_NotExistProfileName() {
+  def setAuthMethod_Profile_NotExistProfileName(): Unit = {
     val config = embulk.newConfigLoader().fromYamlFile(
       new File("src/test/resources/yaml/authMethodProfile.yml"))
 
