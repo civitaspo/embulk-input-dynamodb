@@ -25,7 +25,7 @@ dependencies {
     compile  "org.embulk:embulk-core:0.8.13"
     provided "org.embulk:embulk-core:0.8.13"
 
-    compile "com.amazonaws:aws-java-sdk-dynamodb:1.10.43"
+    compile "com.amazonaws:aws-java-sdk-dynamodb:1.11.711"
 
     // NOTE: Hack Codes until all dependencies are updeted.
     // ref. https://github.com/embulk/embulk/blob/v0.8.13/embulk-core/build.gradle#L20
