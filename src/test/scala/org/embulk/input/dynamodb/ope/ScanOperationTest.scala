@@ -1,84 +1,54 @@
 package org.embulk.input.dynamodb.ope
 
-import java.io.File
-import java.nio.charset.Charset
-import java.nio.file.{FileSystems, Files}
-
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.google.inject.{Binder, Module}
-import org.embulk.EmbulkEmbed
 import org.embulk.config.ConfigSource
-import org.embulk.input.dynamodb.DynamodbInputPlugin
-import org.embulk.plugin.InjectedPluginSource
-import org.embulk.spi.InputPlugin
+import org.embulk.input.dynamodb.testutil.EmbulkTestBase
+import org.embulk.spi.util.Pages
 import org.hamcrest.CoreMatchers._
 import org.hamcrest.MatcherAssert.assertThat
-import org.junit.Assert._
-import org.junit.{Before, Test}
+import org.junit.Test
+import org.msgpack.value.Value
 
-class ScanOperationTest {
-  private var embulk: EmbulkEmbed = null
+import scala.jdk.CollectionConverters._
 
-  private var EMBULK_DYNAMODB_TEST_TABLE: String = null
-  private var mapper: ObjectMapper = null
+class ScanOperationTest  extends EmbulkTestBase {
+  private val EMBULK_DYNAMODB_TEST_TABLE: String = System.getenv("EMBULK_DYNAMODB_TEST_TABLE")
 
-  @Before
-  def createResources(): Unit = {
-    // Get Environments
-    EMBULK_DYNAMODB_TEST_TABLE = System.getenv("EMBULK_DYNAMODB_TEST_TABLE")
+  def doTest(inConfig: ConfigSource): Unit = {
+    val path = embulk.createTempFile("csv")
+    val result = embulk
+        .inputBuilder()
+        .in(inConfig)
+        .outputPath(path)
+        .preview()
 
-    val bootstrap = new EmbulkEmbed.Bootstrap()
-    bootstrap.addModules(new Module {
-      def configure(binder: Binder): Unit = {
-        InjectedPluginSource.registerPluginTo(binder,
-          classOf[InputPlugin],
-          "dynamodb",
-          classOf[DynamodbInputPlugin])
-      }
-    })
+    val pages = result.getPages
+    val head = Pages.toObjects(result.getSchema, pages.get(0)).get(0)
 
-    embulk = bootstrap.initialize()
+    assertThat(head(0).toString, is("key-1"))
+    assertThat(head(1).asInstanceOf[Long], is(0L))
+    assertThat(head(2).asInstanceOf[Double], is(42.195))
+    assertThat(head(3).asInstanceOf[Boolean], is(true))
 
-    mapper = new ObjectMapper()
-  }
+    val arrayValue = head(4).asInstanceOf[Value].asArrayValue()
+    assertThat(arrayValue.size(), is(2))
+    assertThat(arrayValue.get(0).asStringValue().toString, is("list-value"))
+    assertThat(arrayValue.get(1).asIntegerValue().asLong(), is(123L))
 
-
-  def doTest(config: ConfigSource): Unit = {
-    embulk.run(config)
-
-    val fs = FileSystems.getDefault
-    val lines = Files.readAllLines(fs.getPath("dynamodb-local-result000.00.tsv"), Charset.forName("UTF-8"))
-    assertEquals(lines.size, 1)
-
-    val head = lines.get(0)
-    val values = head.split("\t")
-
-    assertThat(values(0), is("key-1"))
-    assertThat(values(1), is("0"))
-    assertThat(values(2), is("42.195"))
-    assertThat(values(3), is("true"))
-
-    val listValue = mapper.readValue(values(4).replaceAll("\"(?!\")", ""), classOf[java.util.List[Object]])
-    assertThat(listValue.size(), is(2))
-    assertThat(listValue.get(0).asInstanceOf[String], is("list-value"))
-    assertThat(listValue.get(1).asInstanceOf[Int], is(123))
-
-    val mapValue = mapper.readValue(values(5).replaceAll("\"(?!\")", ""), classOf[java.util.Map[String, Object]])
-    assert(mapValue.containsKey("map-key-1"))
-    assertThat(mapValue.get("map-key-1").asInstanceOf[String], is("map-value-1"))
-    assert(mapValue.containsKey("map-key-2"))
-    assertThat(mapValue.get("map-key-2").asInstanceOf[Int], is(456))
+    val mapValue = head(5).asInstanceOf[Value].asMapValue()
+    assert(mapValue.keySet().asScala.map(_.toString).contains("map-key-1"))
+    assertThat(mapValue.entrySet().asScala.filter(_.getKey.toString.equals("map-key-1")).head.getValue.toString, is("map-value-1"))
+    assert(mapValue.keySet().asScala.map(_.toString).contains("map-key-2"))
+    assertThat(mapValue.entrySet().asScala.filter(_.getKey.toString.equals("map-key-2")).head.getValue.asIntegerValue().asLong(), is(456L))
   }
 
   @Test
   def scanTest(): Unit = {
-    val config = embulk.newConfigLoader().fromYamlFile(
-      new File("src/test/resources/yaml/dynamodb-local-scan.yml"))
+    val config = embulk.loadYamlResource("yaml/dynamodb-local-scan.yml")
 
     config.getNested("in")
-      .set("operation", "scan")
-      .set("table", EMBULK_DYNAMODB_TEST_TABLE)
+        .set("operation", "scan")
+        .set("table", EMBULK_DYNAMODB_TEST_TABLE)
 
-    doTest(config)
+    doTest(config.getNested("in"))
   }
 }

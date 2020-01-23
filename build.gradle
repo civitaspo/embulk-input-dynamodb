@@ -31,7 +31,7 @@ dependencies {
     testCompile "org.embulk:embulk-standards:0.9.23"
     testCompile "org.embulk:embulk-deps-buffer:0.9.23"
     testCompile "org.embulk:embulk-deps-config:0.9.23"
-    testCompile "org.embulk:embulk-core:0.9.23:tests"
+    testCompile "org.embulk:embulk-test:0.9.23"
 }
 
 compileScala {
