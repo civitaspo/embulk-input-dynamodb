@@ -18,4 +18,16 @@ class EmbulkTestBase
     def destroyEmbulk(): Unit = {
         embulk.destroy()
     }
+
+    def getEnvironmentVariableOrShowErrorMessage(name: String): String = {
+        try {
+            Option(System.getenv(name)) match {
+                case Some(x) => x
+                case None => throw new IllegalStateException(s"Please set the environment variable: $name")
+            }
+        }
+        catch {
+            case e: Throwable => throw new IllegalStateException(s"Please set the environment variable: $name", e)
+        }
+    }
 }

@@ -12,11 +12,11 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class AwsCredentialsTest extends EmbulkTestBase {
-  private val EMBULK_DYNAMODB_TEST_REGION = System.getenv("EMBULK_DYNAMODB_TEST_REGION")
-  private val EMBULK_DYNAMODB_TEST_TABLE = System.getenv("EMBULK_DYNAMODB_TEST_TABLE")
-  private val EMBULK_DYNAMODB_TEST_ACCESS_KEY = System.getenv("EMBULK_DYNAMODB_TEST_ACCESS_KEY")
-  private val EMBULK_DYNAMODB_TEST_SECRET_KEY = System.getenv("EMBULK_DYNAMODB_TEST_SECRET_KEY")
-  private val EMBULK_DYNAMODB_TEST_PROFILE_NAME = System.getenv("EMBULK_DYNAMODB_TEST_PROFILE_NAME")
+  private val EMBULK_DYNAMODB_TEST_REGION = getEnvironmentVariableOrShowErrorMessage("EMBULK_DYNAMODB_TEST_REGION")
+  private val EMBULK_DYNAMODB_TEST_TABLE = getEnvironmentVariableOrShowErrorMessage("EMBULK_DYNAMODB_TEST_TABLE")
+  private val EMBULK_DYNAMODB_TEST_ACCESS_KEY = getEnvironmentVariableOrShowErrorMessage("EMBULK_DYNAMODB_TEST_ACCESS_KEY")
+  private val EMBULK_DYNAMODB_TEST_SECRET_KEY = getEnvironmentVariableOrShowErrorMessage("EMBULK_DYNAMODB_TEST_SECRET_KEY")
+  private val EMBULK_DYNAMODB_TEST_PROFILE_NAME = getEnvironmentVariableOrShowErrorMessage("EMBULK_DYNAMODB_TEST_PROFILE_NAME")
 
   def doTest(inConfig: ConfigSource): Unit = {
     val task: PluginTask = inConfig.loadConfig(classOf[PluginTask])
