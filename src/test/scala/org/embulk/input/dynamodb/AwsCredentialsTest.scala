@@ -3,9 +3,11 @@ package org.embulk.input.dynamodb
 import java.nio.charset.Charset
 import java.nio.file.Files
 
-import org.embulk.config.ConfigSource
+import org.embulk.config.{ConfigException, ConfigSource}
 import org.embulk.exec.PartialExecutionException
 import org.embulk.input.dynamodb.testutil.EmbulkTestBase
+import org.hamcrest.CoreMatchers._
+import org.hamcrest.MatcherAssert.assertThat
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
@@ -17,11 +19,11 @@ class AwsCredentialsTest extends EmbulkTestBase {
   private val EMBULK_DYNAMODB_TEST_PROFILE_NAME = System.getenv("EMBULK_DYNAMODB_TEST_PROFILE_NAME")
 
   def doTest(inConfig: ConfigSource): Unit = {
-    val path = embulk.createTempFile("csv")
-    embulk.runInput(inConfig, path)
-
-    val lines = Files.readAllLines(path, Charset.forName("UTF-8"))
-    assertEquals("KEY-1,1,HogeHoge", lines.get(0))
+    val task: PluginTask = inConfig.loadConfig(classOf[PluginTask])
+    val provider = AwsCredentials.getCredentialsProvider(task)
+    val cred = provider.getCredentials
+    assertThat(cred.getAWSAccessKeyId, notNullValue())
+    assertThat(cred.getAWSSecretKey, notNullValue())
   }
 
   @Test
@@ -50,7 +52,7 @@ class AwsCredentialsTest extends EmbulkTestBase {
     doTest(config.getNested("in"))
   }
 
-  @Test(expected = classOf[PartialExecutionException])
+  @Test(expected = classOf[ConfigException])
   def setAuthMethod_Basic_NotSet(): Unit = {
     val config = embulk.loadYamlResource("yaml/authMethodBasic_Error.yml")
 
@@ -84,7 +86,7 @@ class AwsCredentialsTest extends EmbulkTestBase {
     doTest(config.getNested("in"))
   }
 
-  @Test(expected = classOf[PartialExecutionException])
+  @Test(expected = classOf[ConfigException])
   def setAuthMethod_Profile_NotExistProfileName(): Unit = {
     val config = embulk.loadYamlResource("yaml/authMethodProfile.yml")
 
