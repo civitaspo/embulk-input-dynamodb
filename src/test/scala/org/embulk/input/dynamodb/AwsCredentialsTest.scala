@@ -12,8 +12,6 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class AwsCredentialsTest extends EmbulkTestBase {
-  private val EMBULK_DYNAMODB_TEST_REGION = "us-east-1"
-  private val EMBULK_DYNAMODB_TEST_TABLE = "EMBULK_DYNAMODB_TEST_TABLE"
   private val EMBULK_DYNAMODB_TEST_ACCESS_KEY = getEnvironmentVariableOrShowErrorMessage("EMBULK_DYNAMODB_TEST_ACCESS_KEY")
   private val EMBULK_DYNAMODB_TEST_SECRET_KEY = getEnvironmentVariableOrShowErrorMessage("EMBULK_DYNAMODB_TEST_SECRET_KEY")
   private val EMBULK_DYNAMODB_TEST_PROFILE_NAME = getEnvironmentVariableOrShowErrorMessage("EMBULK_DYNAMODB_TEST_PROFILE_NAME")
@@ -28,73 +26,116 @@ class AwsCredentialsTest extends EmbulkTestBase {
 
   @Test
   def notSetAuthMethod_SetCredentials(): Unit = {
-    val config = embulk.loadYamlResource("yaml/notSetAuthMethod.yml")
+    val inConfig: ConfigSource = embulk.configLoader().fromYamlString(
+      s"""
+        |type: dynamodb
+        |region: us-east-1
+        |table: hoge
+        |operation: scan
+        |access_key: $EMBULK_DYNAMODB_TEST_ACCESS_KEY
+        |secret_key: $EMBULK_DYNAMODB_TEST_SECRET_KEY
+        |columns:
+        |  - {name: key1,   type: string}
+        |  - {name: key2,   type: long}
+        |  - {name: value1, type: string}
+        |""".stripMargin)
 
-    config.getNested("in")
-      .set("region", EMBULK_DYNAMODB_TEST_REGION)
-      .set("table", EMBULK_DYNAMODB_TEST_TABLE)
-      .set("access_key", EMBULK_DYNAMODB_TEST_ACCESS_KEY)
-      .set("secret_key", EMBULK_DYNAMODB_TEST_SECRET_KEY)
-
-    doTest(config.getNested("in"))
+    doTest(inConfig)
   }
 
   @Test
   def setAuthMethod_Basic(): Unit = {
-    val config = embulk.loadYamlResource("yaml/authMethodBasic.yml")
+    val inConfig: ConfigSource = embulk.configLoader().fromYamlString(
+      s"""
+         |type: dynamodb
+         |region: us-east-1
+         |table: hoge
+         |operation: scan
+         |auth_method: basic
+         |access_key: $EMBULK_DYNAMODB_TEST_ACCESS_KEY
+         |secret_key: $EMBULK_DYNAMODB_TEST_SECRET_KEY
+         |columns:
+         |  - {name: key1,   type: string}
+         |  - {name: key2,   type: long}
+         |  - {name: value1, type: string}
+         |""".stripMargin)
 
-    config.getNested("in")
-      .set("region", EMBULK_DYNAMODB_TEST_REGION)
-      .set("table", EMBULK_DYNAMODB_TEST_TABLE)
-      .set("access_key", EMBULK_DYNAMODB_TEST_ACCESS_KEY)
-      .set("secret_key", EMBULK_DYNAMODB_TEST_SECRET_KEY)
-
-    doTest(config.getNested("in"))
+    doTest(inConfig)
   }
 
   @Test(expected = classOf[ConfigException])
   def setAuthMethod_Basic_NotSet(): Unit = {
-    val config = embulk.loadYamlResource("yaml/authMethodBasic_Error.yml")
+    val inConfig: ConfigSource = embulk.configLoader().fromYamlString(
+      s"""
+         |type: dynamodb
+         |region: us-east-1
+         |table: hoge
+         |operation: scan
+         |auth_method: basic
+         |columns:
+         |  - {name: key1,   type: string}
+         |  - {name: key2,   type: long}
+         |  - {name: value1, type: string}
+         |""".stripMargin)
 
-    config.getNested("in")
-      .set("region", EMBULK_DYNAMODB_TEST_REGION)
-      .set("table", EMBULK_DYNAMODB_TEST_TABLE)
-
-    doTest(config.getNested("in"))
+    doTest(inConfig)
   }
 
   @Test
   def setAuthMethod_Env(): Unit = {
-    val config = embulk.loadYamlResource("yaml/authMethodEnv.yml")
+    // NOTE: Requires to set the env vars like 'AWS_ACCESS_KEY_ID' and so on when testing.
+    val inConfig: ConfigSource = embulk.configLoader().fromYamlString(
+      s"""
+         |type: dynamodb
+         |region: us-east-1
+         |table: hoge
+         |operation: scan
+         |auth_method: env
+         |columns:
+         |  - {name: key1,   type: string}
+         |  - {name: key2,   type: long}
+         |  - {name: value1, type: string}
+         |""".stripMargin)
 
-    config.getNested("in")
-      .set("region", EMBULK_DYNAMODB_TEST_REGION)
-      .set("table", EMBULK_DYNAMODB_TEST_TABLE)
-
-    doTest(config.getNested("in"))
+    doTest(inConfig)
   }
 
   @Test
   def setAuthMethod_Profile(): Unit = {
-    val config = embulk.loadYamlResource("yaml/authMethodProfile.yml")
+    // NOTE: Requires to set credentials to '~/.aws' when testing.
+    val inConfig: ConfigSource = embulk.configLoader().fromYamlString(
+      s"""
+         |type: dynamodb
+         |region: us-east-1
+         |table: hoge
+         |operation: scan
+         |auth_method: profile
+         |profile_name: $EMBULK_DYNAMODB_TEST_PROFILE_NAME
+         |columns:
+         |  - {name: key1,   type: string}
+         |  - {name: key2,   type: long}
+         |  - {name: value1, type: string}
+         |""".stripMargin)
 
-    config.getNested("in")
-      .set("region", EMBULK_DYNAMODB_TEST_REGION)
-      .set("table", EMBULK_DYNAMODB_TEST_TABLE)
-      .set("profile_name", EMBULK_DYNAMODB_TEST_PROFILE_NAME)
-
-    doTest(config.getNested("in"))
+    doTest(inConfig)
   }
 
   @Test(expected = classOf[ConfigException])
   def setAuthMethod_Profile_NotExistProfileName(): Unit = {
-    val config = embulk.loadYamlResource("yaml/authMethodProfile.yml")
+    val inConfig: ConfigSource = embulk.configLoader().fromYamlString(
+      s"""
+         |type: dynamodb
+         |region: us-east-1
+         |table: hoge
+         |operation: scan
+         |auth_method: profile
+         |profile_name: DO_NOT_EXIST
+         |columns:
+         |  - {name: key1,   type: string}
+         |  - {name: key2,   type: long}
+         |  - {name: value1, type: string}
+         |""".stripMargin)
 
-    config.getNested("in")
-      .set("region", EMBULK_DYNAMODB_TEST_REGION)
-      .set("table", EMBULK_DYNAMODB_TEST_TABLE)
-      .set("profile_name", "NotExistName")
-
-    doTest(config.getNested("in"))
+    doTest(inConfig)
   }
 }
