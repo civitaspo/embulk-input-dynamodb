@@ -11,8 +11,6 @@ import org.msgpack.value.Value
 import scala.jdk.CollectionConverters._
 
 class ScanOperationTest  extends EmbulkTestBase {
-  private val EMBULK_DYNAMODB_TEST_TABLE = "EMBULK_DYNAMODB_TEST_TABLE"
-
   def doTest(inConfig: ConfigSource): Unit = {
     val path = embulk.createTempFile("csv")
     val result = embulk
@@ -43,12 +41,24 @@ class ScanOperationTest  extends EmbulkTestBase {
 
   @Test
   def scanTest(): Unit = {
-    val config = embulk.loadYamlResource("yaml/dynamodb-local-scan.yml")
+    val inConfig: ConfigSource = embulk.configLoader().fromYamlString(
+      """
+        |type: dynamodb
+        |end_point: http://localhost:8000/
+        |table: EMBULK_DYNAMODB_TEST_TABLE
+        |auth_method: basic
+        |access_key: dummy
+        |secret_key: dummy
+        |operation: scan
+        |columns:
+        |  - {name: pri-key,     type: string}
+        |  - {name: sort-key,    type: long}
+        |  - {name: doubleValue, type: double}
+        |  - {name: boolValue,   type: boolean}
+        |  - {name: listValue,   type: json}
+        |  - {name: mapValue,    type: json}
+        |""".stripMargin)
 
-    config.getNested("in")
-        .set("operation", "scan")
-        .set("table", EMBULK_DYNAMODB_TEST_TABLE)
-
-    doTest(config.getNested("in"))
+    doTest(inConfig)
   }
 }
