@@ -11,7 +11,7 @@ import org.msgpack.value.Value
 import scala.jdk.CollectionConverters._
 
 class QueryOperationTest extends EmbulkTestBase {
-  private val EMBULK_DYNAMODB_TEST_TABLE: String = getEnvironmentVariableOrShowErrorMessage("EMBULK_DYNAMODB_TEST_TABLE")
+  private val EMBULK_DYNAMODB_TEST_TABLE = "EMBULK_DYNAMODB_TEST_TABLE"
 
   def doTest(inConfig: ConfigSource): Unit = {
     val path = embulk.createTempFile("csv")
