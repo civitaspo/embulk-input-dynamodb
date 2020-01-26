@@ -8,11 +8,12 @@ import com.amazonaws.services.dynamodbv2.model.AttributeValue
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.embulk.input.dynamodb.AttributeValueHelper._
 import org.hamcrest.CoreMatchers._
+import org.hamcrest.MatcherAssert.assertThat
 import org.junit.Assert._
 import org.junit.Test
 import org.msgpack.value.ValueFactory
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 class AttributeValueHelperTest {
   @Test

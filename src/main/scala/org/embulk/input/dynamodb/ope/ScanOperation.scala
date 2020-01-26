@@ -7,7 +7,7 @@ import com.amazonaws.services.dynamodbv2.model.{AttributeValue, Condition, ScanR
 import org.embulk.input.dynamodb.PluginTask
 import org.embulk.spi.{BufferAllocator, PageBuilder, PageOutput, Schema}
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 class ScanOperation(client: AmazonDynamoDBClient) extends AbstractOperation {
   override def execute(
@@ -42,7 +42,7 @@ class ScanOperation(client: AmazonDynamoDBClient) extends AbstractOperation {
       val result: ScanResult = client.scan(request)
       evaluateKey = result.getLastEvaluatedKey
 
-      val items = result.getItems.asScala.map(_.asScala.toMap)
+      val items = result.getItems.asScala.map(_.asScala.toMap).toSeq
       recordCount += write(pageBuilder, schema, items)
     } while(evaluateKey != null && (recordLimit == 0 || recordLimit > recordCount))
 

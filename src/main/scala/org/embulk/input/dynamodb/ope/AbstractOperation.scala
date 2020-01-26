@@ -6,7 +6,7 @@ import org.embulk.spi._
 import org.embulk.spi.`type`.Types
 import org.msgpack.value.{Value, ValueFactory}
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 abstract class AbstractOperation {
   def execute(task: PluginTask, schema: Schema, output: PageOutput): Unit

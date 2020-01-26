@@ -12,6 +12,7 @@ import org.embulk.input.dynamodb.DynamodbInputPlugin
 import org.embulk.plugin.InjectedPluginSource
 import org.embulk.spi.InputPlugin
 import org.hamcrest.CoreMatchers._
+import org.hamcrest.MatcherAssert.assertThat
 import org.junit.Assert._
 import org.junit.{Before, Test}
 
@@ -22,7 +23,7 @@ class QueryOperationTest {
   private var mapper: ObjectMapper = null
 
   @Before
-  def createResources() {
+  def createResources(): Unit = {
     // Get Environments
     EMBULK_DYNAMODB_TEST_TABLE = System.getenv("EMBULK_DYNAMODB_TEST_TABLE")
 
@@ -42,7 +43,7 @@ class QueryOperationTest {
   }
 
 
-  def doTest(config: ConfigSource) {
+  def doTest(config: ConfigSource): Unit = {
     embulk.run(config)
 
     val fs = FileSystems.getDefault
@@ -70,7 +71,7 @@ class QueryOperationTest {
   }
 
   @Test
-  def queryTest() {
+  def queryTest(): Unit = {
     val config = embulk.newConfigLoader().fromYamlFile(
       new File("src/test/resources/yaml/dynamodb-local-query.yml"))
 

@@ -9,7 +9,7 @@ object AttributeValueHelper {
 
   // referring aws-scala
   def decodeToValue(value: AttributeValue): Value = {
-    import scala.collection.JavaConverters._
+    import scala.jdk.CollectionConverters._
 
     // FIXME: Need Encode?
     lazy val _bin  = Option(value.getB).map(v => ValueFactory.newBinary(v.array))
