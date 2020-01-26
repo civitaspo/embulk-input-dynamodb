@@ -97,8 +97,27 @@ $ ./gradlew classpath
 $ embulk preview -I lib your-config.yml
 ```
 
+## Run tests
+
+```
+$ ./test/run_dynamodb_local.sh
+$ AWS_ACCESS_KEY_ID=${YOUR_AWS_ACCESS_KEY_ID} \
+  AWS_SECRET_ACCESS_KEY=${YOUR_AWS_SECRET_ACCESS_KEY} \
+  EMBULK_DYNAMODB_TEST_ACCESS_KEY=${YOUR_AWS_ACCESS_KEY_ID} \
+  EMBULK_DYNAMODB_TEST_SECRET_KEY=${YOUR_AWS_SECRET_ACCESS_KEY} \
+  EMBULK_DYNAMODB_TEST_PROFILE_NAME=${YOUR_AWS_PROFILE} \
+  ./gradlew test
+```
+
+If you do not have any real aws account, you can skip the tests that use the real aws account.
+
+```
+$ RUN_AWS_CREDENTIALS_TEST=false ./gradlew test
+```
+
 ## Build
 
 ```
+$ ./test/run_dynamodb_local.sh
 $ ./gradlew gem
 ```

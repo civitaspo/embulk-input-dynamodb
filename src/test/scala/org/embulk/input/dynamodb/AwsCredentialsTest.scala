@@ -1,98 +1,100 @@
 package org.embulk.input.dynamodb
 
-import java.nio.charset.Charset
-import java.nio.file.Files
-
-import org.embulk.config.ConfigSource
-import org.embulk.exec.PartialExecutionException
+import org.embulk.config.{ConfigException, ConfigSource}
 import org.embulk.input.dynamodb.testutil.EmbulkTestBase
-import org.junit.Assert.assertEquals
-import org.junit.Test
+import org.hamcrest.CoreMatchers._
+import org.hamcrest.MatcherAssert.assertThat
+import org.junit.{Assume, Test}
 
 class AwsCredentialsTest extends EmbulkTestBase {
-  private val EMBULK_DYNAMODB_TEST_REGION = System.getenv("EMBULK_DYNAMODB_TEST_REGION")
-  private val EMBULK_DYNAMODB_TEST_TABLE = System.getenv("EMBULK_DYNAMODB_TEST_TABLE")
-  private val EMBULK_DYNAMODB_TEST_ACCESS_KEY = System.getenv("EMBULK_DYNAMODB_TEST_ACCESS_KEY")
-  private val EMBULK_DYNAMODB_TEST_SECRET_KEY = System.getenv("EMBULK_DYNAMODB_TEST_SECRET_KEY")
-  private val EMBULK_DYNAMODB_TEST_PROFILE_NAME = System.getenv("EMBULK_DYNAMODB_TEST_PROFILE_NAME")
+  private val runAwsCredentialsTest: Boolean = Option(System.getenv("RUN_AWS_CREDENTIALS_TEST")) match {
+    case Some(x) =>
+      if (x == "false") false
+      else true
+    case None => true
+  }
+  private lazy val EMBULK_DYNAMODB_TEST_ACCESS_KEY = getEnvironmentVariableOrShowErrorMessage("EMBULK_DYNAMODB_TEST_ACCESS_KEY")
+  private lazy val EMBULK_DYNAMODB_TEST_SECRET_KEY = getEnvironmentVariableOrShowErrorMessage("EMBULK_DYNAMODB_TEST_SECRET_KEY")
+  private lazy val EMBULK_DYNAMODB_TEST_PROFILE_NAME = getEnvironmentVariableOrShowErrorMessage("EMBULK_DYNAMODB_TEST_PROFILE_NAME")
 
   def doTest(inConfig: ConfigSource): Unit = {
-    val path = embulk.createTempFile("csv")
-    embulk.runInput(inConfig, path)
+    val task: PluginTask = inConfig.loadConfig(classOf[PluginTask])
+    val provider = AwsCredentials.getCredentialsProvider(task)
+    val cred = provider.getCredentials
+    assertThat(cred.getAWSAccessKeyId, notNullValue())
+    assertThat(cred.getAWSSecretKey, notNullValue())
+  }
 
-    val lines = Files.readAllLines(path, Charset.forName("UTF-8"))
-    assertEquals("KEY-1,1,HogeHoge", lines.get(0))
+  def defaultInConfig: ConfigSource = {
+    embulk.configLoader().fromYamlString(
+      s"""
+         |type: dynamodb
+         |region: us-east-1
+         |table: hoge
+         |operation: scan
+         |columns:
+         |  - {name: key1,   type: string}
+         |  - {name: key2,   type: long}
+         |  - {name: value1, type: string}
+         |""".stripMargin)
   }
 
   @Test
   def notSetAuthMethod_SetCredentials(): Unit = {
-    val config = embulk.loadYamlResource("yaml/notSetAuthMethod.yml")
+    Assume.assumeTrue(runAwsCredentialsTest)
+    val inConfig: ConfigSource = defaultInConfig
+        .set("access_key", EMBULK_DYNAMODB_TEST_ACCESS_KEY)
+        .set("secret_key", EMBULK_DYNAMODB_TEST_SECRET_KEY)
 
-    config.getNested("in")
-      .set("region", EMBULK_DYNAMODB_TEST_REGION)
-      .set("table", EMBULK_DYNAMODB_TEST_TABLE)
-      .set("access_key", EMBULK_DYNAMODB_TEST_ACCESS_KEY)
-      .set("secret_key", EMBULK_DYNAMODB_TEST_SECRET_KEY)
-
-    doTest(config.getNested("in"))
+    doTest(inConfig)
   }
 
   @Test
   def setAuthMethod_Basic(): Unit = {
-    val config = embulk.loadYamlResource("yaml/authMethodBasic.yml")
+    Assume.assumeTrue(runAwsCredentialsTest)
+    val inConfig: ConfigSource = defaultInConfig
+        .set("auth_method", "basic")
+        .set("access_key", EMBULK_DYNAMODB_TEST_ACCESS_KEY)
+        .set("secret_key", EMBULK_DYNAMODB_TEST_SECRET_KEY)
 
-    config.getNested("in")
-      .set("region", EMBULK_DYNAMODB_TEST_REGION)
-      .set("table", EMBULK_DYNAMODB_TEST_TABLE)
-      .set("access_key", EMBULK_DYNAMODB_TEST_ACCESS_KEY)
-      .set("secret_key", EMBULK_DYNAMODB_TEST_SECRET_KEY)
-
-    doTest(config.getNested("in"))
+    doTest(inConfig)
   }
 
-  @Test(expected = classOf[PartialExecutionException])
+  @Test(expected = classOf[ConfigException])
   def setAuthMethod_Basic_NotSet(): Unit = {
-    val config = embulk.loadYamlResource("yaml/authMethodBasic_Error.yml")
+    val inConfig: ConfigSource = defaultInConfig
+        .set("auth_method", "basic")
 
-    config.getNested("in")
-      .set("region", EMBULK_DYNAMODB_TEST_REGION)
-      .set("table", EMBULK_DYNAMODB_TEST_TABLE)
-
-    doTest(config.getNested("in"))
+    doTest(inConfig)
   }
 
   @Test
   def setAuthMethod_Env(): Unit = {
-    val config = embulk.loadYamlResource("yaml/authMethodEnv.yml")
+    Assume.assumeTrue(runAwsCredentialsTest)
+    // NOTE: Requires to set the env vars like 'AWS_ACCESS_KEY_ID' and so on when testing.
+    val inConfig: ConfigSource = defaultInConfig
+        .set("auth_method", "env")
 
-    config.getNested("in")
-      .set("region", EMBULK_DYNAMODB_TEST_REGION)
-      .set("table", EMBULK_DYNAMODB_TEST_TABLE)
-
-    doTest(config.getNested("in"))
+    doTest(inConfig)
   }
 
   @Test
   def setAuthMethod_Profile(): Unit = {
-    val config = embulk.loadYamlResource("yaml/authMethodProfile.yml")
+    Assume.assumeTrue(runAwsCredentialsTest)
+    // NOTE: Requires to set credentials to '~/.aws' when testing.
+    val inConfig: ConfigSource = defaultInConfig
+        .set("auth_method", "profile")
+        .set("profile_name", EMBULK_DYNAMODB_TEST_PROFILE_NAME)
 
-    config.getNested("in")
-      .set("region", EMBULK_DYNAMODB_TEST_REGION)
-      .set("table", EMBULK_DYNAMODB_TEST_TABLE)
-      .set("profile_name", EMBULK_DYNAMODB_TEST_PROFILE_NAME)
-
-    doTest(config.getNested("in"))
+    doTest(inConfig)
   }
 
-  @Test(expected = classOf[PartialExecutionException])
+  @Test(expected = classOf[ConfigException])
   def setAuthMethod_Profile_NotExistProfileName(): Unit = {
-    val config = embulk.loadYamlResource("yaml/authMethodProfile.yml")
+    val inConfig: ConfigSource = defaultInConfig
+        .set("auth_method", "profile")
+        .set("profile_name", "DO_NOT_EXIST")
 
-    config.getNested("in")
-      .set("region", EMBULK_DYNAMODB_TEST_REGION)
-      .set("table", EMBULK_DYNAMODB_TEST_TABLE)
-      .set("profile_name", "NotExistName")
-
-    doTest(config.getNested("in"))
+    doTest(inConfig)
   }
 }
