@@ -37,7 +37,7 @@ class QueryOperationTest {
       }
     })
 
-    embulk = bootstrap.initializeCloseable()
+    embulk = bootstrap.initialize()
 
     mapper = new ObjectMapper()
   }

@@ -37,7 +37,7 @@ class ScanOperationTest {
       }
     })
 
-    embulk = bootstrap.initializeCloseable()
+    embulk = bootstrap.initialize()
 
     mapper = new ObjectMapper()
   }

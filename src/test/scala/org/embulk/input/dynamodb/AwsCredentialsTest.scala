@@ -44,7 +44,7 @@ class AwsCredentialsTest {
       }
     })
 
-    embulk = bootstrap.initializeCloseable()
+    embulk = bootstrap.initialize()
   }
 
   def doTest(config: ConfigSource): Unit = {
