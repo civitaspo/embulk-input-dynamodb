@@ -9,8 +9,6 @@ general:
 test:
   pre:
     - sh ./test/run_dynamodb_local.sh; sleep 2
-    - sh ./test/create_table.sh
-    - sh ./test/put_items.sh
   post:
     - mkdir -p $CIRCLE_TEST_REPORTS/junit/
     - find . -type f -regex ".*/test-results/*/.*xml" -exec cp {} $CIRCLE_TEST_REPORTS/junit/ \;
