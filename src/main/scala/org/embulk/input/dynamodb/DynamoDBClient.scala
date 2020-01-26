@@ -7,6 +7,10 @@ import org.embulk.config.ConfigException
 
 object DynamoDBClient {
   def create(task: PluginTask): AmazonDynamoDBClient = {
+    // TODO: Fix the deprecation warnings: Be careful as the behavior of the new SDK interface may change significantly.
+    //   - constructor AmazonDynamoDBClient in class AmazonDynamoDBClient is deprecated: see corresponding Javadoc for more information.
+    //   - method withEndpoint in class AmazonWebServiceClient is deprecated: see corresponding Javadoc for more information.
+    //   - method withRegion in class AmazonWebServiceClient is deprecated: see corresponding Javadoc for more information.
     val client = new AmazonDynamoDBClient(
       AwsCredentials.getCredentialsProvider(task),
       new ClientConfiguration()
