@@ -1,4 +1,5 @@
 # Dynamodb input plugin for Embulk
+[![CircleCI](https://circleci.com/gh/lulichn/embulk-input-dynamodb/tree/master.svg?style=svg)](https://circleci.com/gh/lulichn/embulk-input-dynamodb/tree/master)
 
 ## Overview
 
