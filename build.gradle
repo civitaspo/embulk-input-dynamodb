@@ -1,6 +1,6 @@
 plugins {
     id "com.jfrog.bintray" version "1.1"
-    id "com.github.jruby-gradle.base" version "0.1.5"
+    id "com.github.jruby-gradle.base" version "1.5.0"
     id "scala"
     id "checkstyle"
 }
@@ -27,13 +27,21 @@ dependencies {
 
     compile "com.amazonaws:aws-java-sdk-dynamodb:1.10.43"
 
+    // NOTE: Hack Codes until all dependencies are updeted.
+    // ref. https://github.com/embulk/embulk/blob/v0.8.13/embulk-core/build.gradle#L20
+    compile "com.google.guava:guava:18.0"
+    // ref. https://github.com/embulk/embulk/blob/v0.8.13/embulk-core/build.gradle#L41
+    compile "org.msgpack:msgpack-core:0.8.8"
+    // ref. https://github.com/embulk/embulk/blob/v0.8.13/embulk-core/build.gradle#L21
+    testCompile 'com.google.inject:guice:4.0'
+
     testCompile "junit:junit:4.+"
     testCompile "org.embulk:embulk-standards:0.8.13"
     testCompile "org.embulk:embulk-core:0.8.13:tests"
 }
 
 compileScala {
-    scalaCompileOptions.useCompileDaemon = true
+    scalaCompileOptions.metaClass.useCompileDaemon = true
 }
 
 tasks.withType(ScalaCompile) {
@@ -45,7 +53,7 @@ tasks.withType(ScalaCompile) {
 
 // Activating the Zinc based compiler
 tasks.withType(ScalaCompile) {
-    scalaCompileOptions.useAnt = false
+    scalaCompileOptions.metaClass.useAnt = false
 }
 
 task classpath(type: Copy, dependsOn: ["jar"]) {
@@ -53,7 +61,7 @@ task classpath(type: Copy, dependsOn: ["jar"]) {
     from (configurations.runtime - configurations.provided + files(jar.archivePath))
     into "classpath"
 }
-clean { delete 'classpath' }
+clean { delete "classpath" }
 
 checkstyle {
     configFile = file("${project.rootDir}/config/checkstyle/checkstyle.xml")
@@ -72,13 +80,31 @@ task checkstyle(type: Checkstyle) {
     source = sourceSets.main.allJava + sourceSets.test.allJava
 }
 
-task gem(type: JRubyExec, dependsOn: ["build", "gemspec", "classpath"]) {
-    jrubyArgs "-rrubygems/gem_runner", "-eGem::GemRunner.new.run(ARGV)", "build"
-    script "build/gemspec"
+task gem(type: JRubyExec, dependsOn: ["gemspec", "classpath"]) {
+    jrubyArgs "-S"
+    script "gem"
+    scriptArgs "build", "${project.name}.gemspec"
     doLast { ant.move(file: "${project.name}-${project.version}.gem", todir: "pkg") }
 }
 
-task gemspec << { file("build/gemspec").write($/
+task gemPush(type: JRubyExec, dependsOn: ["gem"]) {
+    jrubyArgs "-S"
+    script "gem"
+    scriptArgs "push", "pkg/${project.name}-${project.version}.gem"
+}
+
+task "package"(dependsOn: ["gemspec", "classpath"]) {
+    doLast {
+        println "> Build succeeded."
+        println "> You can run embulk with '-L ${file(".").absolutePath}' argument."
+    }
+}
+
+task gemspec {
+    ext.gemspecFile = file("${project.name}.gemspec")
+    inputs.file "build.gradle"
+    outputs.file gemspecFile
+    doLast { gemspecFile.write($/
 Gem::Specification.new do |spec|
   spec.name          = "${project.name}"
   spec.version       = "${project.version}"
@@ -95,7 +121,10 @@ Gem::Specification.new do |spec|
 
   #spec.add_dependency 'YOUR_GEM_DEPENDENCY', ['~> YOUR_GEM_DEPENDENCY_VERSION']
   spec.add_development_dependency 'bundler', ['~> 1.0']
-  spec.add_development_dependency 'rake', ['>= 10.0']
+  spec.add_development_dependency 'rake', ['~> 12.0']
 end
 /$)
+    }
 }
+clean { delete "${project.name}.gemspec" }
+
