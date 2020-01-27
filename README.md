@@ -1,5 +1,7 @@
 # Dynamodb input plugin for Embulk
 
+![Master CI Status Badge](https://github.com/lulichn/embulk-input-dynamodb/workflows/Master%20CI/badge.svg) ![Test CI Status Badge](https://github.com/lulichn/embulk-input-dynamodb/workflows/Test%20CI/badge.svg)
+
 ## Overview
 
 * **Plugin type**: input
