@@ -1,6 +1,7 @@
 package org.embulk.input.dynamodb.testutil
 
 
+import com.amazonaws.auth.{AWSStaticCredentialsProvider, BasicAWSCredentials}
 import com.amazonaws.client.builder.AwsClientBuilder.EndpointConfiguration
 import com.amazonaws.services.dynamodbv2.{AmazonDynamoDB, AmazonDynamoDBClientBuilder}
 import org.embulk.input.dynamodb.DynamodbInputPlugin
@@ -20,6 +21,11 @@ trait EmbulkTestBase
         AmazonDynamoDBClientBuilder.standard()
             .withEndpointConfiguration(
                 new EndpointConfiguration(s"http://$dynamoDBHost:$dynamoDBPort", "us-east-1")
+                )
+            .withCredentials(
+                new AWSStaticCredentialsProvider(
+                    new BasicAWSCredentials("dummy", "dummy")
+                    )
                 )
             .build()
             .pipe { client =>
