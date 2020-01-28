@@ -9,7 +9,6 @@
 * **Resume supported**: no
 * **Cleanup supported**: no
 
-
 ## Configuration
 - **auth_method**: AWS Credential Type.  
 Available values options are: `basic`, `env`, `instance`, `profile`, `properties`
@@ -92,34 +91,65 @@ out:
   type: stdout
 ```
 
-## Try
+## Development
 
-```
+### Run examples
+
+```shell
 $ ./gradlew classpath
-$ embulk preview -I lib your-config.yml
+## Change the settings according to the settings on your DynamoDB.
+$ vim example/config.yml
+$ embulk run example/config.yml -Ilib
 ```
 
-## Run tests
+### Run tests
 
-```
+```shell
+## Run dynamodb-local
 $ ./test/run_dynamodb_local.sh
 $ AWS_ACCESS_KEY_ID=${YOUR_AWS_ACCESS_KEY_ID} \
-  AWS_SECRET_ACCESS_KEY=${YOUR_AWS_SECRET_ACCESS_KEY} \
-  EMBULK_DYNAMODB_TEST_ACCESS_KEY=${YOUR_AWS_ACCESS_KEY_ID} \
-  EMBULK_DYNAMODB_TEST_SECRET_KEY=${YOUR_AWS_SECRET_ACCESS_KEY} \
-  EMBULK_DYNAMODB_TEST_PROFILE_NAME=${YOUR_AWS_PROFILE} \
-  ./gradlew test
+    AWS_SECRET_ACCESS_KEY=${YOUR_AWS_SECRET_ACCESS_KEY} \
+    EMBULK_DYNAMODB_TEST_ACCESS_KEY=${YOUR_AWS_ACCESS_KEY_ID} \
+    EMBULK_DYNAMODB_TEST_SECRET_KEY=${YOUR_AWS_SECRET_ACCESS_KEY} \
+    EMBULK_DYNAMODB_TEST_PROFILE_NAME=${YOUR_AWS_PROFILE} \
+    ./gradlew test
 ```
 
 If you do not have any real aws account, you can skip the tests that use the real aws account.
 
-```
+```shell
+$ ./test/run_dynamodb_local.sh
 $ RUN_AWS_CREDENTIALS_TEST=false ./gradlew test
 ```
 
-## Build
+### Run the formatter
+
+```shell
+## Just check the format violations
+$ ./gradlew spotlessCheck
+
+## Fix the all format violations
+$ ./gradlew spotlessApply
+```
+
+### Build
 
 ```
-$ ./test/run_dynamodb_local.sh
-$ ./gradlew gem
+$ ./gradlew gem  # -t to watch change of files and rebuild continuously
 ```
+
+### Release gem:
+Fix [build.gradle](./build.gradle), then
+
+
+```shell
+$ ./gradlew gemPush
+```
+
+## ChangeLog
+
+[CHANGELOG.md](./CHANGELOG.md)
+
+## License
+
+[MIT LICENSE](./LICENSE)
