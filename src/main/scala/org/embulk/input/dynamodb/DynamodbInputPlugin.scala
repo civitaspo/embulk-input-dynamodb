@@ -8,7 +8,11 @@ import org.embulk.input.dynamodb.ope.{QueryOperation, ScanOperation}
 import org.embulk.spi._
 
 class DynamodbInputPlugin extends InputPlugin {
-  def transaction(config: ConfigSource, control: InputPlugin.Control): ConfigDiff = {
+
+  def transaction(
+      config: ConfigSource,
+      control: InputPlugin.Control
+  ): ConfigDiff = {
     val task: PluginTask = config.loadConfig(classOf[PluginTask])
 
     val schema: Schema = task.getColumns.toSchema
@@ -17,12 +21,22 @@ class DynamodbInputPlugin extends InputPlugin {
     resume(task.dump(), schema, taskCount, control)
   }
 
-  def resume(taskSource: TaskSource, schema: Schema, taskCount: Int, control: InputPlugin.Control): ConfigDiff = {
+  def resume(
+      taskSource: TaskSource,
+      schema: Schema,
+      taskCount: Int,
+      control: InputPlugin.Control
+  ): ConfigDiff = {
     control.run(taskSource, schema, taskCount)
     Exec.newConfigDiff()
   }
 
-  def run(taskSource: TaskSource, schema: Schema, taskIndex: Int, output: PageOutput): TaskReport = {
+  def run(
+      taskSource: TaskSource,
+      schema: Schema,
+      taskIndex: Int,
+      output: PageOutput
+  ): TaskReport = {
     val task: PluginTask = taskSource.loadTask(classOf[PluginTask])
 
     val client: AmazonDynamoDBClient = DynamoDBClient.create(task)
@@ -36,7 +50,12 @@ class DynamodbInputPlugin extends InputPlugin {
     Exec.newTaskReport()
   }
 
-  def cleanup(taskSource: TaskSource, schema: Schema, taskCount: Int, successTaskReports: JList[TaskReport]): Unit = {
+  def cleanup(
+      taskSource: TaskSource,
+      schema: Schema,
+      taskCount: Int,
+      successTaskReports: JList[TaskReport]
+  ): Unit = {
     // TODO
   }
 

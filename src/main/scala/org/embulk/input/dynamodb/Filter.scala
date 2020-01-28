@@ -18,9 +18,9 @@ class Filter {
   def getFilters: JList[FilterConfig] = filters
 
   override def equals(obj: Any): Boolean = {
-    if(this == obj) return true
+    if (this == obj) return true
 
-    if(!obj.isInstanceOf[Filter]) return false
+    if (!obj.isInstanceOf[Filter]) return false
 
     val other: Filter = obj.asInstanceOf[Filter]
     Objects.equal(filters, other.filters)

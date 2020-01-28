@@ -5,6 +5,7 @@ import org.embulk.config.{Config, ConfigDefault, ConfigInject, Task}
 import org.embulk.spi.{BufferAllocator, SchemaConfig}
 
 trait PluginTask extends Task {
+
   @Config("auth_method")
   @ConfigDefault("null")
   def getAuthMethod: Optional[String]

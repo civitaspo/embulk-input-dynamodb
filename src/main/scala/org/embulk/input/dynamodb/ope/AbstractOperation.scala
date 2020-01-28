@@ -14,9 +14,13 @@ abstract class AbstractOperation {
   def getLimit(limit: Long, recordLimit: Long, recordCount: Long): Int = {
     if (limit > 0 && recordLimit > 0) {
       math.min(limit, recordLimit - recordCount).toInt
-    } else if (limit > 0 || recordLimit > 0) {
+    }
+    else if (limit > 0 || recordLimit > 0) {
       math.max(limit, recordLimit).toInt
-    } else { 0 }
+    }
+    else {
+      0
+    }
   }
 
   def createFilters(task: PluginTask): Map[String, Condition] = {
@@ -24,10 +28,15 @@ abstract class AbstractOperation {
 
     Option(task.getFilters.orNull).map { filters =>
       filters.getFilters.asScala.map { filter =>
-        val attributeValueList = collection.mutable.ArrayBuffer[AttributeValue]()
-        attributeValueList += createAttributeValue(filter.getType, filter.getValue)
+        val attributeValueList =
+          collection.mutable.ArrayBuffer[AttributeValue]()
+        attributeValueList += createAttributeValue(
+          filter.getType,
+          filter.getValue
+        )
         Option(filter.getValue2).map { value2 =>
-          attributeValueList+= createAttributeValue(filter.getType, value2) }
+          attributeValueList += createAttributeValue(filter.getType, value2)
+        }
 
         filterMap += filter.getName -> new Condition()
           .withComparisonOperator(filter.getCondition)
@@ -49,7 +58,11 @@ abstract class AbstractOperation {
     }
   }
 
-  def write(pageBuilder: PageBuilder, schema: Schema, items: Seq[Map[String, AttributeValue]]): Long = {
+  def write(
+      pageBuilder: PageBuilder,
+      schema: Schema,
+      items: Seq[Map[String, AttributeValue]]
+  ): Long = {
     var count = 0
 
     items.foreach { item =>
@@ -76,9 +89,11 @@ abstract class AbstractOperation {
     count
   }
 
-  def convert[A](column: Column,
-                   value: Option[AttributeValue],
-                   f: (Column, A) => Unit)(implicit f1: Option[AttributeValue] => A): Unit =
+  def convert[A](
+      column: Column,
+      value: Option[AttributeValue],
+      f: (Column, A) => Unit
+  )(implicit f1: Option[AttributeValue] => A): Unit =
     f(column, f1(value))
 
   implicit def StringConvert(value: Option[AttributeValue]): String =
@@ -88,14 +103,16 @@ abstract class AbstractOperation {
     value.map(_.getN.toLong).getOrElse(0L)
 
   implicit def DoubleConvert(value: Option[AttributeValue]): Double =
-    value.map(_.getN.toDouble).getOrElse(0D)
+    value.map(_.getN.toDouble).getOrElse(0d)
 
   implicit def BooleanConvert(value: Option[AttributeValue]): Boolean =
     value.exists(_.getBOOL)
 
   implicit def JsonConvert(value: Option[AttributeValue]): Value = {
-    value.map { attr =>
-      AttributeValueHelper.decodeToValue(attr)
-    }.getOrElse(ValueFactory.newNil())
+    value
+      .map { attr =>
+        AttributeValueHelper.decodeToValue(attr)
+      }
+      .getOrElse(ValueFactory.newNil())
   }
 }
