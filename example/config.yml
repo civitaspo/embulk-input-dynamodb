@@ -1,0 +1,14 @@
+in:
+  type: dynamodb
+  region: us-east-1
+  operation: scan
+  table: YOUR_TABLE
+  auth_method: env
+  columns:
+    - {name: pri-key,  type: string}
+    - {name: sort-key, type: long}
+    - {name: value, type: string}
+
+out:
+  type: stdout
+
