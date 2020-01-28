@@ -6,6 +6,7 @@ import com.google.common.base.Optional
 import org.embulk.config.ConfigException
 
 object AwsCredentials {
+
   def getCredentialsProvider(task: PluginTask): AWSCredentialsProvider = {
     if (!task.getAuthMethod.isPresent) {
       // backward compatibility
@@ -16,13 +17,16 @@ object AwsCredentials {
           override def getCredentials: AWSCredentials = {
             new BasicAWSCredentials(
               task.getAccessKey.get(),
-              task.getSecretKey.get())
+              task.getSecretKey.get()
+            )
           }
         }
-      } else {
+      }
+      else {
         new ProfileCredentialsProvider()
       }
-    } else {
+    }
+    else {
       val cred = task.getAuthMethod.get() match {
         case "basic" =>
           val accessKey = require(task.getAccessKey, "'access_key'")
@@ -41,7 +45,8 @@ object AwsCredentials {
 
           try {
             new ProfileCredentialsProvider(profileName).getCredentials
-          } catch {
+          }
+          catch {
             case e: IllegalArgumentException =>
               throw new ConfigException(s"No AWS profile named $profileName")
           }
@@ -50,7 +55,9 @@ object AwsCredentials {
           new SystemPropertiesCredentialsProvider().getCredentials
 
         case _ =>
-          throw new ConfigException(s"Unknown 'auth_method' ${task.getAuthMethod.get()}")
+          throw new ConfigException(
+            s"Unknown 'auth_method' ${task.getAuthMethod.get()}"
+          )
       }
 
       new AWSCredentialsProvider {

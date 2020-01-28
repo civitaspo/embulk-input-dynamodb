@@ -1,6 +1,15 @@
 package org.embulk.input.dynamodb.ope
 
-import com.amazonaws.services.dynamodbv2.model.{AttributeDefinition, AttributeValue, CreateTableRequest, KeySchemaElement, KeyType, ProvisionedThroughput, PutItemRequest, ScalarAttributeType}
+import com.amazonaws.services.dynamodbv2.model.{
+  AttributeDefinition,
+  AttributeValue,
+  CreateTableRequest,
+  KeySchemaElement,
+  KeyType,
+  ProvisionedThroughput,
+  PutItemRequest,
+  ScalarAttributeType
+}
 import org.embulk.config.ConfigSource
 import org.embulk.input.dynamodb.testutil.EmbulkTestBase
 import org.embulk.spi.util.Pages
@@ -12,56 +21,75 @@ import org.msgpack.value.Value
 import scala.jdk.CollectionConverters._
 
 class QueryOperationTest extends EmbulkTestBase {
+
   @Test
   def queryTest(): Unit = {
     cleanupTable("EMBULK_DYNAMODB_TEST_TABLE")
     withDynamoDB { dynamodb =>
       dynamodb.createTable(
         new CreateTableRequest()
-            .withTableName("EMBULK_DYNAMODB_TEST_TABLE")
-            .withAttributeDefinitions(
-              new AttributeDefinition().withAttributeName("pri-key").withAttributeType(ScalarAttributeType.S),
-              new AttributeDefinition().withAttributeName("sort-key").withAttributeType(ScalarAttributeType.N),
-              )
-            .withKeySchema(
-              new KeySchemaElement().withAttributeName("pri-key").withKeyType(KeyType.HASH),
-              new KeySchemaElement().withAttributeName("sort-key").withKeyType(KeyType.RANGE),
-              )
-            .withProvisionedThroughput(
-              new ProvisionedThroughput()
-                  .withReadCapacityUnits(5L)
-                  .withWriteCapacityUnits(5L)
-              )
+          .withTableName("EMBULK_DYNAMODB_TEST_TABLE")
+          .withAttributeDefinitions(
+            new AttributeDefinition()
+              .withAttributeName("pri-key")
+              .withAttributeType(ScalarAttributeType.S),
+            new AttributeDefinition()
+              .withAttributeName("sort-key")
+              .withAttributeType(ScalarAttributeType.N)
+          )
+          .withKeySchema(
+            new KeySchemaElement()
+              .withAttributeName("pri-key")
+              .withKeyType(KeyType.HASH),
+            new KeySchemaElement()
+              .withAttributeName("sort-key")
+              .withKeyType(KeyType.RANGE)
+          )
+          .withProvisionedThroughput(
+            new ProvisionedThroughput()
+              .withReadCapacityUnits(5L)
+              .withWriteCapacityUnits(5L)
+          )
       )
 
       dynamodb.putItem(
         new PutItemRequest()
-            .withTableName("EMBULK_DYNAMODB_TEST_TABLE")
-            .withItem(
-              Map.newBuilder[String, AttributeValue]
-                  .addOne("pri-key", new AttributeValue().withS("key-1"))
-                  .addOne("sort-key", new AttributeValue().withN("0"))
-                  .addOne("doubleValue", new AttributeValue().withN("42.195"))
-                  .addOne("boolValue", new AttributeValue().withBOOL(true))
-                  .addOne("listValue", new AttributeValue().withL(
-                    new AttributeValue().withS("list-value"),
-                    new AttributeValue().withN("123"),
-                  ))
-                  .addOne("mapValue", new AttributeValue().withM(
-                    Map.newBuilder[String, AttributeValue]
-                        .addOne("map-key-1", new AttributeValue().withS("map-value-1"))
-                        .addOne("map-key-2", new AttributeValue().withN("456"))
-                        .result()
-                        .asJava
-                  ))
-                  .result()
-                  .asJava
+          .withTableName("EMBULK_DYNAMODB_TEST_TABLE")
+          .withItem(
+            Map
+              .newBuilder[String, AttributeValue]
+              .addOne("pri-key", new AttributeValue().withS("key-1"))
+              .addOne("sort-key", new AttributeValue().withN("0"))
+              .addOne("doubleValue", new AttributeValue().withN("42.195"))
+              .addOne("boolValue", new AttributeValue().withBOOL(true))
+              .addOne(
+                "listValue",
+                new AttributeValue().withL(
+                  new AttributeValue().withS("list-value"),
+                  new AttributeValue().withN("123")
+                )
               )
+              .addOne(
+                "mapValue",
+                new AttributeValue().withM(
+                  Map
+                    .newBuilder[String, AttributeValue]
+                    .addOne(
+                      "map-key-1",
+                      new AttributeValue().withS("map-value-1")
+                    )
+                    .addOne("map-key-2", new AttributeValue().withN("456"))
+                    .result()
+                    .asJava
+                )
+              )
+              .result()
+              .asJava
+          )
       )
     }
 
-    val inConfig: ConfigSource = embulk.configLoader().fromYamlString(
-      s"""
+    val inConfig: ConfigSource = embulk.configLoader().fromYamlString(s"""
          |type: dynamodb
          |end_point: http://${dynamoDBHost}:${dynamoDBPort}/
          |table: EMBULK_DYNAMODB_TEST_TABLE
@@ -102,9 +130,28 @@ class QueryOperationTest extends EmbulkTestBase {
 
     val mapValue = head(5).asInstanceOf[Value].asMapValue()
     assert(mapValue.keySet().asScala.map(_.toString).contains("map-key-1"))
-    assertThat(mapValue.entrySet().asScala.filter(_.getKey.toString.equals("map-key-1")).head.getValue.toString, is("map-value-1"))
+    assertThat(
+      mapValue
+        .entrySet()
+        .asScala
+        .filter(_.getKey.toString.equals("map-key-1"))
+        .head
+        .getValue
+        .toString,
+      is("map-value-1")
+    )
     assert(mapValue.keySet().asScala.map(_.toString).contains("map-key-2"))
-    assertThat(mapValue.entrySet().asScala.filter(_.getKey.toString.equals("map-key-2")).head.getValue.asIntegerValue().asLong(), is(456L))
+    assertThat(
+      mapValue
+        .entrySet()
+        .asScala
+        .filter(_.getKey.toString.equals("map-key-2"))
+        .head
+        .getValue
+        .asIntegerValue()
+        .asLong(),
+      is(456L)
+    )
 
   }
 }

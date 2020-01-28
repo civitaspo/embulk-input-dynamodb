@@ -11,12 +11,12 @@ class FilterConfig {
   private var _value2: String = _
 
   def this(
-            @JsonProperty("name") _name: String,
-            @JsonProperty("type") _type: String,
-            @JsonProperty("condition") _condition: String,
-            @JsonProperty("value") _value: String,
-            @JsonProperty("value2") _value2: String)
-  {
+      @JsonProperty("name") _name: String,
+      @JsonProperty("type") _type: String,
+      @JsonProperty("condition") _condition: String,
+      @JsonProperty("value") _value: String,
+      @JsonProperty("value2") _value2: String
+  ) {
     this()
     this._name = _name
     this._type = _type
@@ -41,15 +41,15 @@ class FilterConfig {
   def getValue2 = _value2
 
   override def equals(obj: Any): Boolean = {
-    if(this == obj) return true
+    if (this == obj) return true
 
-    if(!obj.isInstanceOf[FilterConfig]) return false
+    if (!obj.isInstanceOf[FilterConfig]) return false
 
     val other: FilterConfig = obj.asInstanceOf[FilterConfig]
     Objects.equal(this._name, other._name) &&
-      Objects.equal(this._type, other._type) &&
-      Objects.equal(this._condition, other._condition) &&
-      Objects.equal(this._value, other._value) &&
-      Objects.equal(this._value2, other._value2)
+    Objects.equal(this._type, other._type) &&
+    Objects.equal(this._condition, other._condition) &&
+    Objects.equal(this._value, other._value) &&
+    Objects.equal(this._value2, other._value2)
   }
 }
