@@ -26,6 +26,7 @@ dependencies {
     provided "org.embulk:embulk-core:0.9.23"
 
     compile "com.amazonaws:aws-java-sdk-dynamodb:1.11.711"
+    compile "com.amazonaws:aws-java-sdk-sts:1.11.711"
 
     testCompile "junit:junit:4.+"
     testCompile "org.embulk:embulk-standards:0.9.23"
