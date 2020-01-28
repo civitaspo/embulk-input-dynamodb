@@ -14,6 +14,8 @@ jobs:
       uses: actions/setup-java@v1
       with:
         java-version: 1.8
+    - name: scalafmt
+      run: ./gradlew spotlessCheck
     - name: Set up DynamoDBLocal
       run:  docker run -d -p 8000:8000 amazon/dynamodb-local:latest -jar ./DynamoDBLocal.jar -inMemory -sharedDb -port 8000
     - name: Test with Gradle
