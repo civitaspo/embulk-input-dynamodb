@@ -1,6 +1,7 @@
 package org.embulk.input.dynamodb
 
 import org.embulk.config.{ConfigException, ConfigSource}
+import org.embulk.input.dynamodb.aws.{Aws, AwsCredentials}
 import org.embulk.input.dynamodb.testutil.EmbulkTestBase
 import org.hamcrest.CoreMatchers._
 import org.hamcrest.MatcherAssert.assertThat
@@ -30,7 +31,7 @@ class AwsCredentialsTest extends EmbulkTestBase {
 
   def doTest(inConfig: ConfigSource): Unit = {
     val task: PluginTask = inConfig.loadConfig(classOf[PluginTask])
-    val provider = AwsCredentials.getCredentialsProvider(task)
+    val provider = AwsCredentials(task).createAwsCredentialsProvider
     val cred = provider.getCredentials
     assertThat(cred.getAWSAccessKeyId, notNullValue())
     assertThat(cred.getAWSSecretKey, notNullValue())
@@ -99,7 +100,7 @@ class AwsCredentialsTest extends EmbulkTestBase {
     doTest(inConfig)
   }
 
-  @Test(expected = classOf[ConfigException])
+  @Test(expected = classOf[IllegalArgumentException])
   def setAuthMethod_Profile_NotExistProfileName(): Unit = {
     val inConfig: ConfigSource = defaultInConfig
       .set("auth_method", "profile")

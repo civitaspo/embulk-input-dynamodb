@@ -2,7 +2,7 @@ package org.embulk.input.dynamodb.ope
 
 import java.util.{List => JList, Map => JMap}
 
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient
+import com.amazonaws.services.dynamodbv2.{AmazonDynamoDB, AmazonDynamoDBClient}
 import com.amazonaws.services.dynamodbv2.model.{
   AttributeValue,
   Condition,
@@ -14,7 +14,7 @@ import org.embulk.spi.{BufferAllocator, PageBuilder, PageOutput, Schema}
 
 import scala.jdk.CollectionConverters._
 
-class ScanOperation(client: AmazonDynamoDBClient) extends AbstractOperation {
+class ScanOperation(client: AmazonDynamoDB) extends AbstractOperation {
 
   override def execute(
       task: PluginTask,
