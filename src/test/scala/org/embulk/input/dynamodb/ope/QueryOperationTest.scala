@@ -1,17 +1,12 @@
 package org.embulk.input.dynamodb.ope
 
-import com.amazonaws.services.dynamodbv2.model.{
-  AttributeDefinition,
-  AttributeValue,
-  CreateTableRequest,
-  KeySchemaElement,
-  KeyType,
-  ProvisionedThroughput,
-  PutItemRequest,
-  ScalarAttributeType
-}
+import com.amazonaws.services.dynamodbv2.model._
 import org.embulk.config.ConfigSource
-import org.embulk.input.dynamodb.testutil.EmbulkTestBase
+import org.embulk.input.dynamodb.testutil.{
+  DynamoDBLocal,
+  DynamoDBTestBase,
+  EmbulkTestBase
+}
 import org.embulk.spi.util.Pages
 import org.hamcrest.CoreMatchers._
 import org.hamcrest.MatcherAssert.assertThat
@@ -20,7 +15,10 @@ import org.msgpack.value.Value
 
 import scala.jdk.CollectionConverters._
 
-class QueryOperationTest extends EmbulkTestBase {
+class QueryOperationTest
+    extends EmbulkTestBase
+    with DynamoDBTestBase
+    with DynamoDBLocal {
 
   @Test
   def queryTest(): Unit = {
@@ -152,6 +150,5 @@ class QueryOperationTest extends EmbulkTestBase {
         .asLong(),
       is(456L)
     )
-
   }
 }

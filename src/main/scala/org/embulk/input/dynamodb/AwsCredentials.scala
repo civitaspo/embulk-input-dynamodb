@@ -11,40 +11,38 @@ object AwsCredentials {
     if (!task.getAuthMethod.isPresent) {
       // backward compatibility
       if (task.getAccessKey.isPresent && task.getSecretKey.isPresent) {
-        new AWSCredentialsProvider {
-          override def refresh(): Unit = {}
-
-          override def getCredentials: AWSCredentials = {
-            new BasicAWSCredentials(
-              task.getAccessKey.get(),
-              task.getSecretKey.get()
-            )
-          }
-        }
+        new AWSStaticCredentialsProvider(
+          new BasicAWSCredentials(
+            task.getAccessKey.get(),
+            task.getSecretKey.get()
+          )
+        )
       }
       else {
         new ProfileCredentialsProvider()
       }
     }
     else {
-      val cred = task.getAuthMethod.get() match {
+      task.getAuthMethod.get() match {
         case "basic" =>
           val accessKey = require(task.getAccessKey, "'access_key'")
           val secretKey = require(task.getSecretKey, "'secret_key'")
 
-          new BasicAWSCredentials(accessKey, secretKey)
+          new AWSStaticCredentialsProvider(
+            new BasicAWSCredentials(accessKey, secretKey)
+          )
 
         case "env" =>
-          new EnvironmentVariableCredentialsProvider().getCredentials
+          new EnvironmentVariableCredentialsProvider()
 
         case "instance" =>
-          InstanceProfileCredentialsProvider.getInstance().getCredentials
+          InstanceProfileCredentialsProvider.getInstance()
 
         case "profile" =>
           val profileName = task.getProfileName.or("default")
 
           try {
-            new ProfileCredentialsProvider(profileName).getCredentials
+            new ProfileCredentialsProvider(profileName)
           }
           catch {
             case e: IllegalArgumentException =>
@@ -52,18 +50,12 @@ object AwsCredentials {
           }
 
         case "properties" =>
-          new SystemPropertiesCredentialsProvider().getCredentials
+          new SystemPropertiesCredentialsProvider()
 
         case _ =>
           throw new ConfigException(
             s"Unknown 'auth_method' ${task.getAuthMethod.get()}"
           )
-      }
-
-      new AWSCredentialsProvider {
-        override def refresh(): Unit = {}
-
-        override def getCredentials: AWSCredentials = { cred }
       }
     }
   }

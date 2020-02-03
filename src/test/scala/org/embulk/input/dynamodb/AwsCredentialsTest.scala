@@ -1,5 +1,10 @@
 package org.embulk.input.dynamodb
 
+import com.amazonaws.auth.profile.ProfileCredentialsProvider
+import com.amazonaws.auth.{
+  AWSStaticCredentialsProvider,
+  EnvironmentVariableCredentialsProvider
+}
 import org.embulk.config.{ConfigException, ConfigSource}
 import org.embulk.input.dynamodb.testutil.EmbulkTestBase
 import org.hamcrest.CoreMatchers._
@@ -7,34 +12,6 @@ import org.hamcrest.MatcherAssert.assertThat
 import org.junit.{Assume, Test}
 
 class AwsCredentialsTest extends EmbulkTestBase {
-
-  private val runAwsCredentialsTest: Boolean = Option(
-    System.getenv("RUN_AWS_CREDENTIALS_TEST")
-  ) match {
-    case Some(x) =>
-      if (x == "false") false
-      else true
-    case None => true
-  }
-
-  private lazy val EMBULK_DYNAMODB_TEST_ACCESS_KEY =
-    getEnvironmentVariableOrShowErrorMessage("EMBULK_DYNAMODB_TEST_ACCESS_KEY")
-
-  private lazy val EMBULK_DYNAMODB_TEST_SECRET_KEY =
-    getEnvironmentVariableOrShowErrorMessage("EMBULK_DYNAMODB_TEST_SECRET_KEY")
-
-  private lazy val EMBULK_DYNAMODB_TEST_PROFILE_NAME =
-    getEnvironmentVariableOrShowErrorMessage(
-      "EMBULK_DYNAMODB_TEST_PROFILE_NAME"
-    )
-
-  def doTest(inConfig: ConfigSource): Unit = {
-    val task: PluginTask = inConfig.loadConfig(classOf[PluginTask])
-    val provider = AwsCredentials.getCredentialsProvider(task)
-    val cred = provider.getCredentials
-    assertThat(cred.getAWSAccessKeyId, notNullValue())
-    assertThat(cred.getAWSSecretKey, notNullValue())
-  }
 
   def defaultInConfig: ConfigSource = {
     embulk.configLoader().fromYamlString(s"""
@@ -51,23 +28,35 @@ class AwsCredentialsTest extends EmbulkTestBase {
 
   @Test
   def notSetAuthMethod_SetCredentials(): Unit = {
-    Assume.assumeTrue(runAwsCredentialsTest)
     val inConfig: ConfigSource = defaultInConfig
-      .set("access_key", EMBULK_DYNAMODB_TEST_ACCESS_KEY)
-      .set("secret_key", EMBULK_DYNAMODB_TEST_SECRET_KEY)
+      .set("access_key", "access_key")
+      .set("secret_key", "secret_key")
 
-    doTest(inConfig)
+    val task: PluginTask = inConfig.loadConfig(classOf[PluginTask])
+
+    val provider = AwsCredentials.getCredentialsProvider(task)
+    assert(provider.isInstanceOf[AWSStaticCredentialsProvider])
+
+    val credentials = provider.getCredentials
+    assertThat(credentials.getAWSAccessKeyId, is("access_key"))
+    assertThat(credentials.getAWSSecretKey, is("secret_key"))
   }
 
   @Test
   def setAuthMethod_Basic(): Unit = {
-    Assume.assumeTrue(runAwsCredentialsTest)
     val inConfig: ConfigSource = defaultInConfig
       .set("auth_method", "basic")
-      .set("access_key", EMBULK_DYNAMODB_TEST_ACCESS_KEY)
-      .set("secret_key", EMBULK_DYNAMODB_TEST_SECRET_KEY)
+      .set("access_key", "access_key")
+      .set("secret_key", "secret_key")
 
-    doTest(inConfig)
+    val task: PluginTask = inConfig.loadConfig(classOf[PluginTask])
+
+    val provider = AwsCredentials.getCredentialsProvider(task)
+    assert(provider.isInstanceOf[AWSStaticCredentialsProvider])
+
+    val credentials = provider.getCredentials
+    assertThat(credentials.getAWSAccessKeyId, is("access_key"))
+    assertThat(credentials.getAWSSecretKey, is("secret_key"))
   }
 
   @Test(expected = classOf[ConfigException])
@@ -75,36 +64,33 @@ class AwsCredentialsTest extends EmbulkTestBase {
     val inConfig: ConfigSource = defaultInConfig
       .set("auth_method", "basic")
 
-    doTest(inConfig)
+    val task: PluginTask = inConfig.loadConfig(classOf[PluginTask])
+    // throws ConfigException
+    AwsCredentials.getCredentialsProvider(task)
   }
 
   @Test
   def setAuthMethod_Env(): Unit = {
-    Assume.assumeTrue(runAwsCredentialsTest)
     // NOTE: Requires to set the env vars like 'AWS_ACCESS_KEY_ID' and so on when testing.
     val inConfig: ConfigSource = defaultInConfig
       .set("auth_method", "env")
 
-    doTest(inConfig)
+    val task: PluginTask = inConfig.loadConfig(classOf[PluginTask])
+
+    val provider = AwsCredentials.getCredentialsProvider(task)
+    assert(provider.isInstanceOf[EnvironmentVariableCredentialsProvider])
   }
 
   @Test
   def setAuthMethod_Profile(): Unit = {
-    Assume.assumeTrue(runAwsCredentialsTest)
     // NOTE: Requires to set credentials to '~/.aws' when testing.
     val inConfig: ConfigSource = defaultInConfig
       .set("auth_method", "profile")
-      .set("profile_name", EMBULK_DYNAMODB_TEST_PROFILE_NAME)
+      .set("profile_name", "default")
 
-    doTest(inConfig)
-  }
+    val task: PluginTask = inConfig.loadConfig(classOf[PluginTask])
 
-  @Test(expected = classOf[ConfigException])
-  def setAuthMethod_Profile_NotExistProfileName(): Unit = {
-    val inConfig: ConfigSource = defaultInConfig
-      .set("auth_method", "profile")
-      .set("profile_name", "DO_NOT_EXIST")
-
-    doTest(inConfig)
+    val provider = AwsCredentials.getCredentialsProvider(task)
+    assert(provider.isInstanceOf[ProfileCredentialsProvider])
   }
 }

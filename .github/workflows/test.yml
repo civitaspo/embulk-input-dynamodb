@@ -21,7 +21,10 @@ jobs:
     - name: Test with Gradle
       run: ./gradlew test
       env:
-        RUN_AWS_CREDENTIALS_TEST: false
+        EMBULK_DYNAMODB_TEST_ACCESS_KEY: ${{ secrets.EMBULK_DYNAMODB_TEST_ACCESS_KEY }}
+        EMBULK_DYNAMODB_TEST_SECRET_KEY: ${{ secrets.EMBULK_DYNAMODB_TEST_SECRET_KEY }}
+        EMBULK_DYNAMODB_TEST_REGION: ap-northeast-1
+        EMBULK_DYNAMODB_TEST_TABLE_NAME: EMBULK_DYNAMODB_TEST_TABLE
     - name: Archive test results
       if: always()
       uses: actions/upload-artifact@v1

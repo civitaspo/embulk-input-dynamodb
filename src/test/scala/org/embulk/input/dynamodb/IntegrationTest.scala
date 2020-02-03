@@ -1,58 +1,85 @@
-package org.embulk.input.dynamodb.ope
+package org.embulk.input.dynamodb
 
 import com.amazonaws.services.dynamodbv2.model._
 import org.embulk.config.ConfigSource
 import org.embulk.input.dynamodb.testutil.{
-  DynamoDBLocal,
+  AmazonDynamoDBClient,
   DynamoDBTestBase,
   EmbulkTestBase
 }
 import org.embulk.spi.util.Pages
 import org.hamcrest.CoreMatchers._
 import org.hamcrest.MatcherAssert.assertThat
-import org.junit.Test
+import org.junit.{Assume, Test}
 import org.msgpack.value.Value
 
 import scala.jdk.CollectionConverters._
 
-class ScanOperationTest
+class IntegrationTest
     extends EmbulkTestBase
     with DynamoDBTestBase
-    with DynamoDBLocal {
+    with AmazonDynamoDBClient {
+
+  implicit val accessKey: String =
+    getEnvironmentVariableOrShowErrorMessage("EMBULK_DYNAMODB_TEST_ACCESS_KEY")
+
+  implicit val secretKey: String =
+    getEnvironmentVariableOrShowErrorMessage("EMBULK_DYNAMODB_TEST_SECRET_KEY")
+
+  implicit val region: String =
+    getEnvironmentVariable("EMBULK_DYNAMODB_TEST_REGION", "ap-northeast-1")
+
+  implicit val tableName: String =
+    getEnvironmentVariable(
+      "EMBULK_DYNAMODB_TEST_TABLE_NAME",
+      "EMBULK_DYNAMODB_TEST_TABLE"
+    )
+
+  private val runAwsCredentialsTest: Boolean = Option(
+    System.getenv("RUN_AWS_CREDENTIALS_TEST")
+  ) match {
+    case Some(x) =>
+      if (x == "false") false
+      else true
+    case None => true
+  }
 
   @Test
-  def scanTest(): Unit = {
-    cleanupTable("EMBULK_DYNAMODB_TEST_TABLE")
-    withDynamoDB { dynamodb =>
-      dynamodb.createTable(
-        new CreateTableRequest()
-          .withTableName("EMBULK_DYNAMODB_TEST_TABLE")
-          .withAttributeDefinitions(
-            new AttributeDefinition()
-              .withAttributeName("pri-key")
-              .withAttributeType(ScalarAttributeType.S),
-            new AttributeDefinition()
-              .withAttributeName("sort-key")
-              .withAttributeType(ScalarAttributeType.N)
-          )
-          .withKeySchema(
-            new KeySchemaElement()
-              .withAttributeName("pri-key")
-              .withKeyType(KeyType.HASH),
-            new KeySchemaElement()
-              .withAttributeName("sort-key")
-              .withKeyType(KeyType.RANGE)
-          )
-          .withProvisionedThroughput(
-            new ProvisionedThroughput()
-              .withReadCapacityUnits(5L)
-              .withWriteCapacityUnits(5L)
-          )
-      )
+  def queryTest(): Unit = {
+    Assume.assumeTrue(runAwsCredentialsTest)
 
+    cleanupTable(tableName)
+
+    prepareTable(
+      new CreateTableRequest()
+        .withTableName(tableName)
+        .withAttributeDefinitions(
+          new AttributeDefinition()
+            .withAttributeName("pri-key")
+            .withAttributeType(ScalarAttributeType.S),
+          new AttributeDefinition()
+            .withAttributeName("sort-key")
+            .withAttributeType(ScalarAttributeType.N)
+        )
+        .withKeySchema(
+          new KeySchemaElement()
+            .withAttributeName("pri-key")
+            .withKeyType(KeyType.HASH),
+          new KeySchemaElement()
+            .withAttributeName("sort-key")
+            .withKeyType(KeyType.RANGE)
+        )
+        .withProvisionedThroughput(
+          new ProvisionedThroughput()
+            .withReadCapacityUnits(1L)
+            .withWriteCapacityUnits(1L)
+        )
+    )
+
+    withDynamoDB { dynamodb =>
       dynamodb.putItem(
         new PutItemRequest()
-          .withTableName("EMBULK_DYNAMODB_TEST_TABLE")
+          .withTableName(tableName)
           .withItem(
             Map
               .newBuilder[String, AttributeValue]
@@ -89,12 +116,14 @@ class ScanOperationTest
 
     val inConfig: ConfigSource = embulk.configLoader().fromYamlString(s"""
          |type: dynamodb
-         |end_point: http://${dynamoDBHost}:${dynamoDBPort}/
-         |table: EMBULK_DYNAMODB_TEST_TABLE
+         |table: $tableName
+         |region: $region
          |auth_method: basic
-         |access_key: dummy
-         |secret_key: dummy
-         |operation: scan
+         |access_key: $accessKey
+         |secret_key: $secretKey
+         |operation: query
+         |filters:
+         |  - {name: pri-key, type: string, condition: EQ, value: key-1}
          |columns:
          |  - {name: pri-key,     type: string}
          |  - {name: sort-key,    type: long}
@@ -148,5 +177,7 @@ class ScanOperationTest
         .asLong(),
       is(456L)
     )
+
+    cleanupTable(tableName)
   }
 }
