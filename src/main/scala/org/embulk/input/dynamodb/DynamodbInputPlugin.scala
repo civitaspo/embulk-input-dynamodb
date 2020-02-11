@@ -2,7 +2,6 @@ package org.embulk.input.dynamodb
 
 import java.util.{List => JList}
 
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient
 import org.embulk.config._
 import org.embulk.input.dynamodb.aws.Aws
 import org.embulk.input.dynamodb.ope.{QueryOperation, ScanOperation}
