@@ -11,14 +11,14 @@ import org.embulk.spi.InputPlugin
 import org.embulk.test.TestingEmbulk
 import org.junit.{After, Rule}
 
-import scala.util.chaining._
 import scala.util.{Failure, Success, Try}
+import scala.util.chaining._
 
 trait EmbulkTestBase {
   val dynamoDBHost: String = "localhost"
   val dynamoDBPort: Int = 8000
 
-  def withDynamoDB[A](f: AmazonDynamoDB => A): A = {
+  def withDynamodb[A](f: AmazonDynamoDB => A): A = {
     AmazonDynamoDBClientBuilder
       .standard()
       .withEndpointConfiguration(
@@ -40,7 +40,7 @@ trait EmbulkTestBase {
   }
 
   def cleanupTable(name: String): Unit = {
-    withDynamoDB { dynamodb =>
+    withDynamodb { dynamodb =>
       Try(dynamodb.describeTable(name)) match {
         case Success(_) => dynamodb.deleteTable(name)
         case Failure(_) => // Do nothing.

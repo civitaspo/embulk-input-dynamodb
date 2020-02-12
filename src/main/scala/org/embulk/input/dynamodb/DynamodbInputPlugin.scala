@@ -39,7 +39,7 @@ class DynamodbInputPlugin extends InputPlugin {
   ): TaskReport = {
     val task: PluginTask = taskSource.loadTask(classOf[PluginTask])
 
-    Aws(task).withDynamoDB { dynamodb =>
+    Aws(task).withDynamodb { dynamodb =>
       val ope = task.getOperation.toLowerCase match {
         case "scan"  => new ScanOperation(dynamodb)
         case "query" => new QueryOperation(dynamodb)

@@ -25,7 +25,7 @@ class ScanOperationTest extends EmbulkTestBase {
   @Test
   def scanTest(): Unit = {
     cleanupTable("EMBULK_DYNAMODB_TEST_TABLE")
-    withDynamoDB { dynamodb =>
+    withDynamodb { dynamodb =>
       dynamodb.createTable(
         new CreateTableRequest()
           .withTableName("EMBULK_DYNAMODB_TEST_TABLE")
