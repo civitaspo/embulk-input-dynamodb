@@ -41,6 +41,7 @@ jobs:
         AWS_SECRET_ACCESS_KEY: ${{secrets.AWS_SECRET_ACCESS_KEY}}
         EMBULK_DYNAMODB_TEST_ACCESS_KEY: ${{secrets.AWS_ACCESS_KEY_ID}}
         EMBULK_DYNAMODB_TEST_SECRET_KEY: ${{secrets.AWS_SECRET_ACCESS_KEY}}
+        EMBULK_DYNAMODB_TEST_ASSUME_ROLE_ROLE_ARN: ${{secrets.EMBULK_DYNAMODB_TEST_ASSUME_ROLE_ROLE_ARN}}
     - name: Archive test results
       if: always()
       uses: actions/upload-artifact@v1
