@@ -1,7 +1,8 @@
-package org.embulk.input.dynamodb.ope
+package org.embulk.input.dynamodb.deprecated.ope
 
 import com.amazonaws.services.dynamodbv2.model.{AttributeValue, Condition}
-import org.embulk.input.dynamodb.{AttributeValueHelper, PluginTask}
+import org.embulk.input.dynamodb.PluginTask
+import org.embulk.input.dynamodb.deprecated.AttributeValueHelper
 import org.embulk.spi._
 import org.embulk.spi.`type`.Types
 import org.msgpack.value.{Value, ValueFactory}
@@ -26,7 +27,7 @@ abstract class AbstractOperation {
   def createFilters(task: PluginTask): Map[String, Condition] = {
     val filterMap = collection.mutable.HashMap[String, Condition]()
 
-    Option(task.getFilters.orNull).map { filters =>
+    Option(task.getFilters.orElse(null)).map { filters =>
       filters.getFilters.asScala.map { filter =>
         val attributeValueList =
           collection.mutable.ArrayBuffer[AttributeValue]()

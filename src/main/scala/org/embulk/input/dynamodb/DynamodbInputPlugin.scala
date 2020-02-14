@@ -4,7 +4,7 @@ import java.util.{List => JList}
 
 import org.embulk.config._
 import org.embulk.input.dynamodb.aws.Aws
-import org.embulk.input.dynamodb.ope.{QueryOperation, ScanOperation}
+import org.embulk.input.dynamodb.deprecated.ope.{QueryOperation, ScanOperation}
 import org.embulk.spi._
 
 class DynamodbInputPlugin extends InputPlugin {
@@ -13,8 +13,7 @@ class DynamodbInputPlugin extends InputPlugin {
       config: ConfigSource,
       control: InputPlugin.Control
   ): ConfigDiff = {
-    val task: PluginTask = config.loadConfig(classOf[PluginTask])
-
+    val task: PluginTask = PluginTask.load(config)
     val schema: Schema = task.getColumns.toSchema
     val taskCount: Int = 1
 
@@ -37,7 +36,7 @@ class DynamodbInputPlugin extends InputPlugin {
       taskIndex: Int,
       output: PageOutput
   ): TaskReport = {
-    val task: PluginTask = taskSource.loadTask(classOf[PluginTask])
+    val task: PluginTask = PluginTask.load(taskSource)
 
     Aws(task).withDynamodb { dynamodb =>
       val ope = task.getOperation.toLowerCase match {
