@@ -12,6 +12,10 @@ import org.embulk.config.{
 }
 import org.embulk.input.dynamodb.aws.Aws
 import org.embulk.input.dynamodb.deprecated.Filter
+import org.embulk.input.dynamodb.operation.{
+  DynamodbQueryOperation,
+  DynamodbScanOperation
+}
 import org.embulk.spi.{BufferAllocator, SchemaConfig}
 
 import scala.util.chaining._
@@ -67,15 +71,13 @@ trait PluginTask extends Task with Aws.Task {
   @ConfigDefault("null")
   def getFilters: Optional[Filter]
 
-  // TODO: Implement
-  //
-  //  @Config("scan")
-  //  @ConfigDefault("null")
-  //  def getScan: Optional[DynamodbScanOperation.Task]
-  //
-  //  @Config("query")
-  //  @ConfigDefault("null")
-  //  def getQuery: Optional[DynamodbQueryOperation.Task]
+  @Config("scan")
+  @ConfigDefault("null")
+  def getScan: Optional[DynamodbScanOperation.Task]
+
+  @Config("query")
+  @ConfigDefault("null")
+  def getQuery: Optional[DynamodbQueryOperation.Task]
 
   @ConfigInject
   def getBufferAllocator: BufferAllocator
