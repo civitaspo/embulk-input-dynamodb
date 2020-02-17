@@ -9,7 +9,7 @@ import org.embulk.spi._
 
 class DynamodbInputPlugin extends InputPlugin {
 
-  def transaction(
+  override def transaction(
       config: ConfigSource,
       control: InputPlugin.Control
   ): ConfigDiff = {
@@ -17,20 +17,20 @@ class DynamodbInputPlugin extends InputPlugin {
     val schema: Schema = task.getColumns.toSchema
     val taskCount: Int = 1
 
-    resume(task.dump(), schema, taskCount, control)
+    control.run(task.dump(), schema, taskCount)
+    Exec.newConfigDiff()
   }
 
-  def resume(
+  override def resume(
       taskSource: TaskSource,
       schema: Schema,
       taskCount: Int,
       control: InputPlugin.Control
   ): ConfigDiff = {
-    control.run(taskSource, schema, taskCount)
-    Exec.newConfigDiff()
+    throw new UnsupportedOperationException
   }
 
-  def run(
+  override def run(
       taskSource: TaskSource,
       schema: Schema,
       taskIndex: Int,
@@ -51,17 +51,14 @@ class DynamodbInputPlugin extends InputPlugin {
     Exec.newTaskReport()
   }
 
-  def cleanup(
+  override def cleanup(
       taskSource: TaskSource,
       schema: Schema,
       taskCount: Int,
       successTaskReports: JList[TaskReport]
-  ): Unit = {
-    // TODO
-  }
+  ): Unit = {}
 
-  def guess(config: ConfigSource): ConfigDiff = {
-    // TODO
-    null
+  override def guess(config: ConfigSource): ConfigDiff = {
+    throw new UnsupportedOperationException
   }
 }
