@@ -22,7 +22,11 @@ import org.embulk.spi.unit.LocalFile
 
 import scala.util.chaining._
 
-trait PluginTask extends Task with Aws.Task {
+trait PluginTask
+    extends Task
+    with Aws.Task
+    with ColumnOptions.Task
+    with TypeOptions.Task {
 
   @deprecated(
     message = "Use #getScan() or #getQuery() instead.",
@@ -176,6 +180,17 @@ object PluginTask {
     override def getEndPoint: Optional[String] = task.getEndPoint
     override def getEndpoint: Optional[String] = task.getEndpoint
     override def getRegion: Optional[String] = task.getRegion
+
+    override def getColumnOptions: JMap[String, ColumnOptions.ColumnOption] =
+      task.getColumnOptions
+
+    override def getTypeOptions: JMap[String, TypeOptions.TypeOption] =
+      task.getTypeOptions
+    override def getDefaultTimeZoneId: String = task.getDefaultTimeZoneId
+
+    override def getDefaultTimestampFormat: String =
+      task.getDefaultTimestampFormat
+    override def getDefaultDate: String = task.getDefaultDate
   }
 
   def load(configSource: ConfigSource): PluginTask = {
