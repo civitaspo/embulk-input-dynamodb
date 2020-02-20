@@ -3,8 +3,6 @@ package org.embulk.input.dynamodb
 import java.util.{List => JList}
 
 import org.embulk.config._
-import org.embulk.input.dynamodb.aws.Aws
-import org.embulk.input.dynamodb.deprecated.ope.{QueryOperation, ScanOperation}
 import org.embulk.spi._
 
 class DynamodbInputPlugin extends InputPlugin {
@@ -14,6 +12,10 @@ class DynamodbInputPlugin extends InputPlugin {
       control: InputPlugin.Control
   ): ConfigDiff = {
     val task: PluginTask = PluginTask.load(config)
+    if (isDeprecatedOperationRequired(task))
+      return DeprecatedDynamodbInputPlugin.transaction(config, control)
+
+    // TODO: Implement new operation
     val schema: Schema = task.getColumns.toSchema
     val taskCount: Int = 1
 
@@ -27,6 +29,14 @@ class DynamodbInputPlugin extends InputPlugin {
       taskCount: Int,
       control: InputPlugin.Control
   ): ConfigDiff = {
+    val task: PluginTask = PluginTask.load(taskSource)
+    if (isDeprecatedOperationRequired(task))
+      return DeprecatedDynamodbInputPlugin.resume(
+        taskSource,
+        schema,
+        taskCount,
+        control
+      )
     throw new UnsupportedOperationException
   }
 
@@ -37,17 +47,15 @@ class DynamodbInputPlugin extends InputPlugin {
       output: PageOutput
   ): TaskReport = {
     val task: PluginTask = PluginTask.load(taskSource)
+    if (isDeprecatedOperationRequired(task))
+      return DeprecatedDynamodbInputPlugin.run(
+        taskSource,
+        schema,
+        taskIndex,
+        output
+      )
 
-    Aws(task).withDynamodb { dynamodb =>
-      task.getOperation.ifPresent { ope =>
-        val o = ope.toLowerCase match {
-          case "scan"  => new ScanOperation(dynamodb)
-          case "query" => new QueryOperation(dynamodb)
-        }
-        o.execute(task, schema, output)
-      }
-    }
-
+    // TODO: Implement new operation
     Exec.newTaskReport()
   }
 
@@ -56,9 +64,24 @@ class DynamodbInputPlugin extends InputPlugin {
       schema: Schema,
       taskCount: Int,
       successTaskReports: JList[TaskReport]
-  ): Unit = {}
+  ): Unit = {
+    val task: PluginTask = PluginTask.load(taskSource)
+    if (isDeprecatedOperationRequired(task))
+      DeprecatedDynamodbInputPlugin.cleanup(
+        taskSource,
+        schema,
+        taskCount,
+        successTaskReports
+      )
+  }
 
   override def guess(config: ConfigSource): ConfigDiff = {
+    val task: PluginTask = PluginTask.load(config)
+    if (isDeprecatedOperationRequired(task))
+      return DeprecatedDynamodbInputPlugin.guess(config)
     throw new UnsupportedOperationException
   }
+
+  private def isDeprecatedOperationRequired(task: PluginTask): Boolean =
+    task.getOperation.isPresent
 }
