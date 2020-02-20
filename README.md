@@ -137,19 +137,20 @@ $ embulk run example/config.yml -Ilib
 
 ```shell
 ## Run dynamodb-local
-$ ./test/run_dynamodb_local.sh
+$ ./run_dynamodb_local.sh
 $ AWS_ACCESS_KEY_ID=${YOUR_AWS_ACCESS_KEY_ID} \
     AWS_SECRET_ACCESS_KEY=${YOUR_AWS_SECRET_ACCESS_KEY} \
     EMBULK_DYNAMODB_TEST_ACCESS_KEY=${YOUR_AWS_ACCESS_KEY_ID} \
     EMBULK_DYNAMODB_TEST_SECRET_KEY=${YOUR_AWS_SECRET_ACCESS_KEY} \
     EMBULK_DYNAMODB_TEST_PROFILE_NAME=${YOUR_AWS_PROFILE} \
+    EMBULK_DYNAMODB_TEST_ASSUME_ROLE_ROLE_ARN=${YOUR_ROLE_ARN} \
     ./gradlew test
 ```
 
 If you do not have any real aws account, you can skip the tests that use the real aws account.
 
 ```shell
-$ ./test/run_dynamodb_local.sh
+$ ./run_dynamodb_local.sh
 $ RUN_AWS_CREDENTIALS_TEST=false ./gradlew test
 ```
 
