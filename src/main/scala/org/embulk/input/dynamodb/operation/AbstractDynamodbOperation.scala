@@ -4,7 +4,6 @@ import java.util.{Optional, Map => JMap}
 
 import com.amazonaws.services.dynamodbv2.model.{ReturnConsumedCapacity, Select}
 import org.embulk.config.{Config, ConfigDefault, Task => EmbulkTask}
-import org.embulk.input.dynamodb.model.AttributeValue
 
 object AbstractDynamodbOperation {
 
@@ -18,7 +17,7 @@ object AbstractDynamodbOperation {
 
     @Config("exclusive_start_key")
     @ConfigDefault("{}")
-    def getExclusiveStartKey: JMap[String, AttributeValue.Task]
+    def getExclusiveStartKey: JMap[String, DynamodbAttributeValue.Task]
 
     // ref. https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Expressions.ExpressionAttributeNames.html
     @Config("expression_attribute_names")
@@ -28,7 +27,7 @@ object AbstractDynamodbOperation {
     // ref. https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Expressions.ExpressionAttributeValues.html
     @Config("expression_attribute_values")
     @ConfigDefault("{}")
-    def getExpressionAttributeValues: JMap[String, AttributeValue.Task]
+    def getExpressionAttributeValues: JMap[String, DynamodbAttributeValue.Task]
 
     // ref. https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Query.html#Query.FilterExpression
     // ref. https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Scan.html#Scan.FilterExpression

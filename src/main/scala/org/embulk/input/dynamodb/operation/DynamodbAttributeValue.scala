@@ -1,4 +1,4 @@
-package org.embulk.input.dynamodb.model
+package org.embulk.input.dynamodb.operation
 
 import java.nio.ByteBuffer
 import java.nio.charset.StandardCharsets
@@ -14,7 +14,7 @@ import scala.util.chaining._
   * TODO: I want to bind directly `org.embulk.config.Config`` to `com.amazonaws.services.dynamodbv2.model.AttributeValue`.
   * Should I implement `com.amazonaws.transform.JsonUnmarshallerContext`?
  **/
-object AttributeValue {
+object DynamodbAttributeValue {
 
   trait Task extends EmbulkTask {
 
@@ -44,11 +44,11 @@ object AttributeValue {
 
     @Config("M")
     @ConfigDefault("null")
-    def getM: Optional[JMap[String, AttributeValue.Task]]
+    def getM: Optional[JMap[String, DynamodbAttributeValue.Task]]
 
     @Config("L")
     @ConfigDefault("null")
-    def getL: Optional[JList[AttributeValue.Task]]
+    def getL: Optional[JList[DynamodbAttributeValue.Task]]
 
     @Config("NULL")
     @ConfigDefault("null")
