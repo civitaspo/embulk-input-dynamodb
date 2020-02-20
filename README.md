@@ -127,9 +127,9 @@ out:
 ### Run examples
 
 ```shell
+$ ./run_dynamodb_local.sh
+$ ./example/prepare_dynamodb_table.sh
 $ ./gradlew classpath
-## Change the settings according to the settings on your DynamoDB.
-$ vim example/config.yml
 $ embulk run example/config.yml -Ilib
 ```
 
