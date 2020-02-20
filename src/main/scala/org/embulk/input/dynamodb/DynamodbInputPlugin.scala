@@ -2,8 +2,8 @@ package org.embulk.input.dynamodb
 
 import java.util.{List => JList}
 
-import org.embulk.config._
-import org.embulk.spi._
+import org.embulk.config.{ConfigDiff, ConfigSource, TaskReport, TaskSource}
+import org.embulk.spi.{Exec, InputPlugin, PageOutput, Schema}
 
 class DynamodbInputPlugin extends InputPlugin {
 
