@@ -22,5 +22,14 @@ object DynamodbQueryOperation {
   }
 }
 
-class DynamodbQueryOperation(task: DynamodbQueryOperation.Task)
-    extends AbstractDynamodbOperation(task) {}
+case class DynamodbQueryOperation(task: DynamodbQueryOperation.Task)
+    extends AbstractDynamodbOperation[QueryRequest](task) {
+
+  def newRequest: QueryRequest = {
+    new QueryRequest()
+      .tap(configureRequest)
+      .tap(r => r.setKeyConditionExpression(task.getKeyConditionExpression))
+      .tap(r => r.setScanIndexForward(task.getScanIndexForward))
+  }
+
+}

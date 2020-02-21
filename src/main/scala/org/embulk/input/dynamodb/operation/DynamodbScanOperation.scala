@@ -2,7 +2,10 @@ package org.embulk.input.dynamodb.operation
 
 import java.util.Optional
 
+import com.amazonaws.services.dynamodbv2.model.ScanRequest
 import org.embulk.config.{Config, ConfigDefault}
+
+import scala.util.chaining._
 
 object DynamodbScanOperation {
 
@@ -23,5 +26,13 @@ object DynamodbScanOperation {
   }
 }
 
-class DynamodbScanOperation(task: DynamodbScanOperation.Task)
-    extends AbstractDynamodbOperation(task) {}
+case class DynamodbScanOperation(task: DynamodbScanOperation.Task)
+    extends AbstractDynamodbOperation[ScanRequest](task) {
+
+  override def newRequest: ScanRequest = {
+    new ScanRequest()
+      .tap(configureRequest)
+      .tap(r => task.getSegment.ifPresent(v => r.setSegment(v)))
+      .tap(r => task.getTotalSegment.ifPresent(v => r.setTotalSegments(v)))
+  }
+}

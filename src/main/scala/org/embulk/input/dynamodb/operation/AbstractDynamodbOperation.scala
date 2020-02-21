@@ -1,9 +1,17 @@
 package org.embulk.input.dynamodb.operation
 
+import java.lang.{Boolean => JBoolean, Integer => JInteger, String => JString}
 import java.util.{Optional, Map => JMap}
 
-import com.amazonaws.services.dynamodbv2.model.{ReturnConsumedCapacity, Select}
+import com.amazonaws.services.dynamodbv2.model.{
+  AttributeValue,
+  ReturnConsumedCapacity,
+  Select
+}
 import org.embulk.config.{Config, ConfigDefault, Task => EmbulkTask}
+
+import scala.jdk.CollectionConverters._
+import scala.language.reflectiveCalls
 
 object AbstractDynamodbOperation {
 
@@ -71,6 +79,57 @@ object AbstractDynamodbOperation {
     def getTableName: String
     def setTableName(tableName: String): Unit
   }
+
+  type Request = {
+    def setConsistentRead(v: JBoolean): Unit
+    def setExclusiveStartKey(v: JMap[JString, AttributeValue]): Unit
+    def setExpressionAttributeNames(v: JMap[JString, JString]): Unit
+    def setExpressionAttributeValues(v: JMap[JString, AttributeValue]): Unit
+    def setFilterExpression(v: JString): Unit
+    def setIndexName(v: JString): Unit
+    def setLimit(v: JInteger): Unit
+    def setProjectionExpression(v: JString): Unit
+    def setReturnConsumedCapacity(v: ReturnConsumedCapacity): Unit
+    def setSelect(v: Select): Unit
+    def setTableName(v: JString): Unit
+  }
+
 }
 
-abstract class AbstractDynamodbOperation(task: AbstractDynamodbOperation.Task) {}
+abstract class AbstractDynamodbOperation[A <: AbstractDynamodbOperation.Request](
+    task: AbstractDynamodbOperation.Task
+) {
+
+  def configureRequest(req: A): Unit = {
+    def attributeValueTaskToAttributeValue(
+        x: (String, DynamodbAttributeValue.Task)
+    ): (String, AttributeValue) = {
+      (x._1, DynamodbAttributeValue(x._2))
+    }
+
+    req.setConsistentRead(task.getConsistentRead)
+    if (!task.getExclusiveStartKey.isEmpty)
+      req.setExclusiveStartKey(
+        task.getExclusiveStartKey.asScala
+          .map(attributeValueTaskToAttributeValue)
+          .asJava
+      )
+    if (!task.getExpressionAttributeNames.isEmpty)
+      req.setExpressionAttributeNames(task.getExpressionAttributeNames)
+    if (!task.getExpressionAttributeValues.isEmpty)
+      req.setExpressionAttributeValues(
+        task.getExpressionAttributeValues.asScala
+          .map(attributeValueTaskToAttributeValue)
+          .asJava
+      )
+    task.getFilterExpression.ifPresent(req.setFilterExpression)
+    task.getIndexName.ifPresent(req.setIndexName)
+    task.getBatchSize.ifPresent(v => req.setLimit(JInteger.valueOf(v))) // Note: Use BatchSize for the limit per a request.
+    task.getProjectionExpression.ifPresent(req.setProjectionExpression)
+    task.getReturnConsumedCapacity.ifPresent(req.setReturnConsumedCapacity)
+    task.getSelect.ifPresent(req.setSelect)
+    req.setTableName(task.getTableName)
+  }
+
+  def newRequest: A
+}
