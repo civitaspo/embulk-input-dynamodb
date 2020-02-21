@@ -42,3 +42,25 @@ aws dynamodb put-item \
     }' \
     --endpoint-url http://localhost:8000 \
     --region us-east-1
+
+aws dynamodb put-item \
+    --table-name='embulk-input-dynamodb_example' \
+    --item='{
+        "primary-key" : { "S" : "key-1" },
+        "sort-key" : { "N" : "1" },
+        "doubleValue" : { "NULL" : true },
+        "listValue" : { "L":
+            [
+                { "NULL" : true},
+                { "N" : "123"}
+            ]
+        },
+        "mapValue" : { "M":
+            {
+                "map-key-1" : { "S" : "map-value-1" },
+                "map-key-2" : { "N" : "456" }
+            }
+        }
+    }' \
+    --endpoint-url http://localhost:8000 \
+    --region us-east-1
