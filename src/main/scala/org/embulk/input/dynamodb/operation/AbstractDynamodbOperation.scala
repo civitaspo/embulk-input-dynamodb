@@ -9,6 +9,7 @@ import com.amazonaws.services.dynamodbv2.model.{
   Select
 }
 import org.embulk.config.{Config, ConfigDefault, Task => EmbulkTask}
+import org.embulk.input.dynamodb.item.DynamodbAttributeValue
 
 import scala.jdk.CollectionConverters._
 import scala.language.reflectiveCalls
@@ -104,7 +105,7 @@ abstract class AbstractDynamodbOperation[A <: AbstractDynamodbOperation.Request]
     def attributeValueTaskToAttributeValue(
         x: (String, DynamodbAttributeValue.Task)
     ): (String, AttributeValue) = {
-      (x._1, DynamodbAttributeValue(x._2))
+      (x._1, DynamodbAttributeValue(x._2).getOriginal)
     }
 
     req.setConsistentRead(task.getConsistentRead)
