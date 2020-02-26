@@ -13,16 +13,17 @@ import org.embulk.config.{
 }
 import org.embulk.input.dynamodb.aws.{Aws, HttpProxy}
 import org.embulk.input.dynamodb.deprecated.Filter
+import org.embulk.input.dynamodb.item.DynamodbItemSchema
 import org.embulk.input.dynamodb.operation.{
   DynamodbQueryOperation,
   DynamodbScanOperation
 }
-import org.embulk.spi.{BufferAllocator, SchemaConfig}
+import org.embulk.spi.BufferAllocator
 import org.embulk.spi.unit.LocalFile
 
 import scala.util.chaining._
 
-trait PluginTask extends Task with Aws.Task {
+trait PluginTask extends Task with Aws.Task with DynamodbItemSchema.Task {
 
   @deprecated(
     message = "Use #getScan() or #getQuery() instead.",
@@ -61,9 +62,6 @@ trait PluginTask extends Task with Aws.Task {
 
   @Config("table")
   def getTable: String
-
-  @Config("columns")
-  def getColumns: SchemaConfig
 
   @deprecated(
     message =
@@ -145,7 +143,9 @@ object PluginTask {
     }
 
     override def getTable: String = task.getTable
-    override def getColumns: SchemaConfig = task.getColumns
+
+    override def getColumns: DynamodbItemSchema.SchemaConfigCompat =
+      task.getColumns
     override def getScan: Optional[DynamodbScanOperation.Task] = task.getScan
     override def getQuery: Optional[DynamodbQueryOperation.Task] = task.getQuery
     override def getBufferAllocator: BufferAllocator = task.getBufferAllocator
