@@ -62,21 +62,6 @@ object DynamodbAttributeValue {
     def getBOOL: Optional[Boolean]
   }
 
-  sealed abstract class ValueType
-
-  object ValueType {
-    final case object S extends ValueType
-    final case object N extends ValueType
-    final case object B extends ValueType
-    final case object SS extends ValueType
-    final case object NS extends ValueType
-    final case object BS extends ValueType
-    final case object M extends ValueType
-    final case object L extends ValueType
-    final case object NULL extends ValueType
-    final case object BOOL extends ValueType
-    final case object UNKNOWN extends ValueType
-  }
 
   def apply(task: Task): DynamodbAttributeValue = {
     val original = new AttributeValue()
@@ -142,18 +127,18 @@ class DynamodbAttributeValue(original: AttributeValue) {
   def getNULL: Boolean = getOriginal.getNULL
   def getBOOL: Boolean = getOriginal.getBOOL
 
-  def getValueType: DynamodbAttributeValue.ValueType = {
-    if (hasS) return DynamodbAttributeValue.ValueType.S
-    if (hasN) return DynamodbAttributeValue.ValueType.N
-    if (hasB) return DynamodbAttributeValue.ValueType.B
-    if (hasSS) return DynamodbAttributeValue.ValueType.SS
-    if (hasNS) return DynamodbAttributeValue.ValueType.NS
-    if (hasBS) return DynamodbAttributeValue.ValueType.BS
-    if (hasM) return DynamodbAttributeValue.ValueType.M
-    if (hasL) return DynamodbAttributeValue.ValueType.L
-    if (hasNULL) return DynamodbAttributeValue.ValueType.NULL
-    if (hasBOOL) return DynamodbAttributeValue.ValueType.BOOL
-    DynamodbAttributeValue.ValueType.UNKNOWN
+  def getValueType: DynamodbAttributeValueType = {
+    if (hasS) return DynamodbAttributeValueType.S
+    if (hasN) return DynamodbAttributeValueType.N
+    if (hasB) return DynamodbAttributeValueType.B
+    if (hasSS) return DynamodbAttributeValueType.SS
+    if (hasNS) return DynamodbAttributeValueType.NS
+    if (hasBS) return DynamodbAttributeValueType.BS
+    if (hasM) return DynamodbAttributeValueType.M
+    if (hasL) return DynamodbAttributeValueType.L
+    if (hasNULL) return DynamodbAttributeValueType.NULL
+    if (hasBOOL) return DynamodbAttributeValueType.BOOL
+    DynamodbAttributeValueType.UNKNOWN
   }
 
 }
