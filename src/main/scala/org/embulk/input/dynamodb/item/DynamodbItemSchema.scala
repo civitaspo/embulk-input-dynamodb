@@ -4,11 +4,13 @@ import java.util.{Optional, List => JList}
 
 import com.fasterxml.jackson.annotation.{JsonCreator, JsonValue}
 import org.embulk.config.{Config, ConfigDefault, Task => EmbulkTask}
+import org.embulk.spi.{Column, Schema}
+import org.embulk.spi.`type`.Type
 import org.embulk.spi.time.TimestampParser
-import org.embulk.spi.Schema
 
 import scala.jdk.CollectionConverters._
 import scala.util.chaining._
+import scala.util.Try
 
 object DynamodbItemSchema {
 
@@ -59,4 +61,50 @@ object DynamodbItemSchema {
 
 }
 
-case class DynamodbItemSchema(task: DynamodbItemSchema.Task) {}
+case class DynamodbItemSchema(task: DynamodbItemSchema.Task) {
+
+  // TODO: build in this class after removing SchemaConfigCompat.
+  private lazy val embulkSchema: Schema = task.getColumns.toSchema
+
+  private lazy val timestampParsers: Map[String, TimestampParser] =
+    task.getColumns.columnTasks.map { columnTask =>
+      columnTask.getName -> TimestampParser.of(task, columnTask)
+    }.toMap
+
+  private lazy val attributeTypes: Map[String, DynamodbAttributeValueType] =
+    task.getColumns.columnTasks
+      .filter(_.getAttributeType.isPresent)
+      .map { columnTask =>
+        columnTask.getName -> DynamodbAttributeValueType(
+          columnTask.getAttributeType.get()
+        )
+      }
+      .toMap
+
+  private lazy val embulkColumns: Map[String, Column] =
+    getEmbulkSchema.getColumns.asScala
+      .map(column => column.getName -> column)
+      .toMap
+
+  def getEmbulkSchema: Schema = embulkSchema
+
+  def getTimestampParser(column: Column): Option[TimestampParser] =
+    timestampParsers.get(column.getName)
+
+  def getTimestampParser(columnName: String): Option[TimestampParser] =
+    getEmbulkColumn(columnName).flatMap(getTimestampParser)
+
+  def getAttributeType(column: Column): Option[DynamodbAttributeValueType] =
+    attributeTypes.get(column.getName)
+
+  def getAttributeType(
+      columnName: String
+  ): Option[DynamodbAttributeValueType] =
+    getEmbulkColumn(columnName).flatMap(getAttributeType)
+
+  def getEmbulkColumn(columnName: String): Option[Column] =
+    embulkColumns.get(columnName)
+
+  def getEmbulkColumn(columnIndex: Int): Option[Column] =
+    Try(getEmbulkSchema.getColumn(columnIndex)).toOption
+}

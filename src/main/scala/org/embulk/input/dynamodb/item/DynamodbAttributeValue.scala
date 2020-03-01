@@ -6,9 +6,6 @@ import java.util.{Optional, List => JList, Map => JMap}
 
 import com.amazonaws.services.dynamodbv2.model.AttributeValue
 import org.embulk.config.{Config, ConfigDefault, Task => EmbulkTask}
-import org.embulk.input.dynamodb.logger
-import org.embulk.spi.time.Timestamp
-import org.msgpack.value.{Value, ValueFactory}
 
 import scala.jdk.CollectionConverters._
 import scala.util.chaining._
@@ -61,7 +58,6 @@ object DynamodbAttributeValue {
     @ConfigDefault("null")
     def getBOOL: Optional[Boolean]
   }
-
 
   def apply(task: Task): DynamodbAttributeValue = {
     val original = new AttributeValue()
@@ -127,7 +123,7 @@ class DynamodbAttributeValue(original: AttributeValue) {
   def getNULL: Boolean = getOriginal.getNULL
   def getBOOL: Boolean = getOriginal.getBOOL
 
-  def getValueType: DynamodbAttributeValueType = {
+  def getType: DynamodbAttributeValueType = {
     if (hasS) return DynamodbAttributeValueType.S
     if (hasN) return DynamodbAttributeValueType.N
     if (hasB) return DynamodbAttributeValueType.B
@@ -140,5 +136,4 @@ class DynamodbAttributeValue(original: AttributeValue) {
     if (hasBOOL) return DynamodbAttributeValueType.BOOL
     DynamodbAttributeValueType.UNKNOWN
   }
-
 }
