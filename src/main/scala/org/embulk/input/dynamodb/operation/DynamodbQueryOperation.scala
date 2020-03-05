@@ -7,7 +7,7 @@ import scala.util.chaining._
 
 object DynamodbQueryOperation {
 
-  trait Task extends DynamodbOperationCommonOptions.Task {
+  trait Task extends AbstractDynamodbOperation.Task {
 
     // ref. https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Query.html#Query.KeyConditionExpressions
     @Config("key_condition_expression")
@@ -22,14 +22,14 @@ object DynamodbQueryOperation {
   }
 }
 
-case class DynamodbQueryOperation(task: DynamodbQueryOperation.Task) {
+case class DynamodbQueryOperation(task: DynamodbQueryOperation.Task)
+    extends AbstractDynamodbOperation[QueryRequest](task) {
 
   def newRequest: QueryRequest = {
     new QueryRequest()
-      .tap(r => DynamodbOperationCommonOptions.configureRequest(r, task))
+      .tap(configureRequest)
       .tap(r => r.setKeyConditionExpression(task.getKeyConditionExpression))
       .tap(r => r.setScanIndexForward(task.getScanIndexForward))
   }
 
-  def getEmbulkTaskCount: Int = 1
 }
