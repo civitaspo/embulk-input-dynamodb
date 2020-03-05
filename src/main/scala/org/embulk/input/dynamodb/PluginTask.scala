@@ -15,6 +15,7 @@ import org.embulk.input.dynamodb.aws.{Aws, HttpProxy}
 import org.embulk.input.dynamodb.deprecated.Filter
 import org.embulk.input.dynamodb.item.DynamodbItemSchema
 import org.embulk.input.dynamodb.operation.{
+  DynamodbOperationProxy,
   DynamodbQueryOperation,
   DynamodbScanOperation
 }
@@ -23,7 +24,11 @@ import org.embulk.spi.unit.LocalFile
 
 import scala.util.chaining._
 
-trait PluginTask extends Task with Aws.Task with DynamodbItemSchema.Task {
+trait PluginTask
+    extends Task
+    with Aws.Task
+    with DynamodbItemSchema.Task
+    with DynamodbOperationProxy.Task {
 
   @deprecated(
     message = "Use #getScan() or #getQuery() instead.",
@@ -204,13 +209,5 @@ object PluginTask {
         "Either \"scan\" or \"query\" option is required."
       )
     }
-    if (task.getScan.isPresent && task.getQuery.isPresent) {
-      throw new ConfigException(
-        "Both \"scan\" and \"query\" option must not be used at the same time."
-      )
-    }
-    task.getScan.ifPresent(_.setTableName(task.getTable))
-    task.getQuery.ifPresent(_.setTableName(task.getTable))
-
   }
 }
