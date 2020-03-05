@@ -5,16 +5,22 @@ import org.embulk.spi.time.Timestamp
 import org.msgpack.value.Value
 
 case class DynamodbItemReader(
-    schema: DynamodbItemSchema,
-    ite: DynamodbItemIterator,
-    currentItem: Map[String, DynamodbAttributeValue] = _
+    private val schema: DynamodbItemSchema,
+    private val ite: DynamodbItemIterator
 ) {
+  private var currentItem: Map[String, DynamodbAttributeValue] = _
 
   val converter: DynamodbAttributeValueEmbulkConverter =
     DynamodbAttributeValueEmbulkConverter(schema)
 
-  def nextItem: Option[DynamodbItemReader] =
-    ite.nextOption().map(i => copy(currentItem = i))
+  def nextItem: Boolean = {
+    ite.nextOption() match {
+      case Some(v) =>
+        currentItem = v
+        true
+      case None => false
+    }
+  }
 
   def getSchema: DynamodbItemSchema = schema
 

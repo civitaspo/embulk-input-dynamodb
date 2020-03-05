@@ -2,8 +2,17 @@ package org.embulk.input.dynamodb
 
 import java.util.{List => JList}
 
+import com.amazonaws.services.dynamodbv2.model.AttributeValue
 import org.embulk.config.{ConfigDiff, ConfigSource, TaskReport, TaskSource}
-import org.embulk.spi.{Exec, InputPlugin, PageOutput, Schema}
+import org.embulk.input.dynamodb.aws.Aws
+import org.embulk.input.dynamodb.item.{
+  DynamodbItemColumnVisitor,
+  DynamodbItemIterator,
+  DynamodbItemReader,
+  DynamodbItemSchema
+}
+import org.embulk.input.dynamodb.operation.DynamodbOperationProxy
+import org.embulk.spi.{Exec, InputPlugin, PageBuilder, PageOutput, Schema}
 
 class DynamodbInputPlugin extends InputPlugin {
 
@@ -15,9 +24,8 @@ class DynamodbInputPlugin extends InputPlugin {
     if (isDeprecatedOperationRequired(task))
       return DeprecatedDynamodbInputPlugin.transaction(config, control)
 
-    // TODO: Implement new operation
-    val schema: Schema = task.getColumns.toSchema
-    val taskCount: Int = 1
+    val schema: Schema = DynamodbItemSchema(task).getEmbulkSchema
+    val taskCount: Int = DynamodbOperationProxy(task).getEmbulkTaskCount
 
     control.run(task.dump(), schema, taskCount)
     Exec.newConfigDiff()
@@ -55,7 +63,30 @@ class DynamodbInputPlugin extends InputPlugin {
         output
       )
 
-    // TODO: Implement new operation
+    val pageBuilder = new PageBuilder(task.getBufferAllocator, schema, output)
+
+    val itemsConsumer: Seq[Map[String, AttributeValue]] => Unit = { records =>
+      val itemReader = DynamodbItemReader(
+        DynamodbItemSchema(task),
+        DynamodbItemIterator(records)
+      )
+
+      val visitor = DynamodbItemColumnVisitor(itemReader, pageBuilder)
+
+      while (itemReader.nextItem) {
+        schema.visitColumns(visitor)
+        pageBuilder.addRecord()
+      }
+    }
+
+    Aws(task).withDynamodb { dynamodb =>
+      DynamodbOperationProxy(task).run(
+        dynamodb,
+        taskIndex,
+        itemsConsumer
+      )
+    }
+    pageBuilder.finish()
     Exec.newTaskReport()
   }
 

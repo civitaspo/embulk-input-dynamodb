@@ -60,7 +60,7 @@ case class DynamodbAttributeValueEmbulkConverter(schema: DynamodbItemSchema) {
     )
   }
 
-  private case class Convert(
+  case class Convert(
       attributeValue: DynamodbAttributeValue,
       typeEnforcer: Option[DynamodbAttributeValueType] = None,
       timestampParser: Option[TimestampParser] = None
