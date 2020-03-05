@@ -65,10 +65,10 @@ class DynamodbInputPlugin extends InputPlugin {
 
     val pageBuilder = new PageBuilder(task.getBufferAllocator, schema, output)
 
-    val itemsConsumer: Seq[Map[String, AttributeValue]] => Unit = { records =>
+    val itemsConsumer: Seq[Map[String, AttributeValue]] => Unit = { items =>
       val itemReader = DynamodbItemReader(
         DynamodbItemSchema(task),
-        DynamodbItemIterator(records)
+        DynamodbItemIterator(items)
       )
 
       val visitor = DynamodbItemColumnVisitor(itemReader, pageBuilder)
