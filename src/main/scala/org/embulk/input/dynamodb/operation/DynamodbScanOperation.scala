@@ -6,6 +6,7 @@ import com.amazonaws.services.dynamodbv2.model.{AttributeValue, ScanRequest}
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
 import org.embulk.config.{Config, ConfigDefault, ConfigException}
 
+import scala.jdk.CollectionConverters._
 import scala.util.chaining._
 
 object DynamodbScanOperation {
@@ -16,8 +17,6 @@ object DynamodbScanOperation {
     @Config("segment")
     @ConfigDefault("null")
     def getSegment: Optional[Int]
-
-    def setSegment(segment: Optional[Int]): Unit
 
     // ref. https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Scan.html#Scan.ParallelScan
     @Config("total_segment")
@@ -41,16 +40,50 @@ case class DynamodbScanOperation(task: DynamodbScanOperation.Task)
       )
   }
 
-  private def newRequest: ScanRequest = {
+  private def newRequest(
+      embulkTaskIndex: Int,
+      lastEvaluatedKey: Option[Map[String, AttributeValue]]
+  ): ScanRequest = {
     new ScanRequest()
-      .tap(configureRequest)
-      .tap(r => task.getSegment.ifPresent(v => r.setSegment(v)))
-      .tap(r => task.getTotalSegment.ifPresent(v => r.setTotalSegments(v)))
+      .tap(configureRequest(_, lastEvaluatedKey))
+      .tap { r =>
+        task.getTotalSegment.ifPresent { totalSegment =>
+          r.setTotalSegments(totalSegment)
+          r.setSegment(task.getSegment.orElse(embulkTaskIndex))
+        }
+      }
+  }
+
+  private def runInternal(
+      dynamodb: AmazonDynamoDB,
+      embulkTaskIndex: Int,
+      f: Seq[Map[String, AttributeValue]] => Unit,
+      lastEvaluatedKey: Option[Map[String, AttributeValue]] = None,
+      loadedRecords: Long = 0
+  ): Unit = {
+    val loadableRecords: Option[Long] = calculateLoadableRecords(loadedRecords)
+
+    val result = dynamodb.scan(newRequest(embulkTaskIndex, lastEvaluatedKey))
+    loadableRecords match {
+      case Some(v) if (result.getCount > v) =>
+        f(result.getItems.asScala.take(v.toInt).map(_.asScala.toMap).toSeq)
+      case None =>
+        f(result.getItems.asScala.map(_.asScala.toMap).toSeq)
+        Option(result.getLastEvaluatedKey).foreach { lastEvaluatedKey =>
+          runInternal(
+            dynamodb,
+            embulkTaskIndex,
+            f,
+            lastEvaluatedKey = Option(lastEvaluatedKey.asScala.toMap),
+            loadedRecords = loadedRecords + result.getCount
+          )
+        }
+    }
   }
 
   override def run(
       dynamodb: AmazonDynamoDB,
       embulkTaskIndex: Int,
-      f: List[Map[String, AttributeValue]] => Unit
-  ): Unit = {}
+      f: Seq[Map[String, AttributeValue]] => Unit
+  ): Unit = runInternal(dynamodb, embulkTaskIndex, f)
 }

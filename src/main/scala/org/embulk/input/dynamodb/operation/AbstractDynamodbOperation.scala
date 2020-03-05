@@ -101,10 +101,18 @@ abstract class AbstractDynamodbOperation(
     task: AbstractDynamodbOperation.Task
 ) extends EmbulkDynamodbOperation {
 
+  protected def calculateLoadableRecords(loadedRecords: Long): Option[Long] = {
+    if (!task.getLimit.isPresent) return None
+    val loadableRecords = task.getLimit.get() - loadedRecords
+    if (loadableRecords <= 0) Option(0L)
+    else Option(loadableRecords)
+  }
+
   protected def configureRequest[
       A <: AbstractDynamodbOperation.RequestBuilderMethods
   ](
-      req: A
+      req: A,
+      lastEvaluatedKey: Option[Map[String, AttributeValue]]
   ): Unit = {
     def attributeValueTaskToAttributeValue(
         x: (String, DynamodbAttributeValue.Task)
@@ -113,12 +121,17 @@ abstract class AbstractDynamodbOperation(
     }
 
     req.setConsistentRead(task.getConsistentRead)
-    if (!task.getExclusiveStartKey.isEmpty)
-      req.setExclusiveStartKey(
-        task.getExclusiveStartKey.asScala
-          .map(attributeValueTaskToAttributeValue)
-          .asJava
-      )
+    lastEvaluatedKey match {
+      case Some(v) => req.setExclusiveStartKey(v.asJava)
+      case None =>
+        if (!task.getExclusiveStartKey.isEmpty)
+          req.setExclusiveStartKey(
+            task.getExclusiveStartKey.asScala
+              .map(attributeValueTaskToAttributeValue)
+              .asJava
+          )
+    }
+
     if (!task.getExpressionAttributeNames.isEmpty)
       req.setExpressionAttributeNames(task.getExpressionAttributeNames)
     if (!task.getExpressionAttributeValues.isEmpty)

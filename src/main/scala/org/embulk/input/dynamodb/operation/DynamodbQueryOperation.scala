@@ -4,6 +4,7 @@ import com.amazonaws.services.dynamodbv2.model.{AttributeValue, QueryRequest}
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
 import org.embulk.config.{Config, ConfigDefault}
 
+import scala.jdk.CollectionConverters._
 import scala.util.chaining._
 
 object DynamodbQueryOperation {
@@ -26,16 +27,43 @@ object DynamodbQueryOperation {
 case class DynamodbQueryOperation(task: DynamodbQueryOperation.Task)
     extends AbstractDynamodbOperation(task) {
 
-  private def newRequest: QueryRequest = {
+  private def newRequest(
+      lastEvaluatedKey: Option[Map[String, AttributeValue]]
+  ): QueryRequest = {
     new QueryRequest()
-      .tap(configureRequest)
+      .tap(configureRequest(_, lastEvaluatedKey))
       .tap(r => r.setKeyConditionExpression(task.getKeyConditionExpression))
       .tap(r => r.setScanIndexForward(task.getScanIndexForward))
+  }
+
+  private def runInternal(
+      dynamodb: AmazonDynamoDB,
+      f: Seq[Map[String, AttributeValue]] => Unit,
+      lastEvaluatedKey: Option[Map[String, AttributeValue]] = None,
+      loadedRecords: Long = 0
+  ): Unit = {
+    val loadableRecords: Option[Long] = calculateLoadableRecords(loadedRecords)
+
+    val result = dynamodb.query(newRequest(lastEvaluatedKey))
+    loadableRecords match {
+      case Some(v) if (result.getCount > v) =>
+        f(result.getItems.asScala.take(v.toInt).map(_.asScala.toMap).toSeq)
+      case None =>
+        f(result.getItems.asScala.map(_.asScala.toMap).toSeq)
+        Option(result.getLastEvaluatedKey).foreach { lastEvaluatedKey =>
+          runInternal(
+            dynamodb,
+            f,
+            lastEvaluatedKey = Option(lastEvaluatedKey.asScala.toMap),
+            loadedRecords = loadedRecords + result.getCount
+          )
+        }
+    }
   }
 
   override def run(
       dynamodb: AmazonDynamoDB,
       embulkTaskIndex: Int,
-      f: List[Map[String, AttributeValue]] => Unit
-  ): Unit = {}
+      f: Seq[Map[String, AttributeValue]] => Unit
+  ): Unit = runInternal(dynamodb, f)
 }

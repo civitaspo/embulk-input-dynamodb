@@ -54,6 +54,6 @@ case class DynamodbOperationProxy(task: DynamodbOperationProxy.Task)
   override def run(
       dynamodb: AmazonDynamoDB,
       embulkTaskIndex: Int,
-      f: List[Map[String, AttributeValue]] => Unit
+      f: Seq[Map[String, AttributeValue]] => Unit
   ): Unit = operation.run(dynamodb, embulkTaskIndex, f)
 }

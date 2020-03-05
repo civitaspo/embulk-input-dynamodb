@@ -10,6 +10,6 @@ trait EmbulkDynamodbOperation {
   def run(
       dynamodb: AmazonDynamoDB,
       embulkTaskIndex: Int,
-      f: List[Map[String, AttributeValue]] => Unit
+      f: Seq[Map[String, AttributeValue]] => Unit
   ): Unit
 }
