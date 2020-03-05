@@ -1,6 +1,7 @@
 package org.embulk.input.dynamodb.operation
 
-import com.amazonaws.services.dynamodbv2.model.QueryRequest
+import com.amazonaws.services.dynamodbv2.model.{AttributeValue, QueryRequest}
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
 import org.embulk.config.{Config, ConfigDefault}
 
 import scala.util.chaining._
@@ -23,13 +24,18 @@ object DynamodbQueryOperation {
 }
 
 case class DynamodbQueryOperation(task: DynamodbQueryOperation.Task)
-    extends AbstractDynamodbOperation[QueryRequest](task) {
+    extends AbstractDynamodbOperation(task) {
 
-  def newRequest: QueryRequest = {
+  private def newRequest: QueryRequest = {
     new QueryRequest()
       .tap(configureRequest)
       .tap(r => r.setKeyConditionExpression(task.getKeyConditionExpression))
       .tap(r => r.setScanIndexForward(task.getScanIndexForward))
   }
 
+  override def run(
+      dynamodb: AmazonDynamoDB,
+      embulkTaskIndex: Int,
+      f: List[Map[String, AttributeValue]] => Unit
+  ): Unit = {}
 }

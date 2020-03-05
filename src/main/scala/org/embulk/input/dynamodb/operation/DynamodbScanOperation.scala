@@ -2,14 +2,15 @@ package org.embulk.input.dynamodb.operation
 
 import java.util.Optional
 
-import com.amazonaws.services.dynamodbv2.model.ScanRequest
+import com.amazonaws.services.dynamodbv2.model.{AttributeValue, ScanRequest}
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
 import org.embulk.config.{Config, ConfigDefault, ConfigException}
 
 import scala.util.chaining._
 
 object DynamodbScanOperation {
 
-  trait Task extends DynamodbOperationCommonOptions.Task {
+  trait Task extends AbstractDynamodbOperation.Task {
 
     // ref. https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Scan.html#Scan.ParallelScan
     @Config("segment")
@@ -26,9 +27,10 @@ object DynamodbScanOperation {
   }
 }
 
-case class DynamodbScanOperation(task: DynamodbScanOperation.Task) {
+case class DynamodbScanOperation(task: DynamodbScanOperation.Task)
+    extends AbstractDynamodbOperation(task) {
 
-  def getEmbulkTaskCount: Int = {
+  override def getEmbulkTaskCount: Int = {
     if (task.getTotalSegment.isPresent && task.getSegment.isPresent) 1
     else if (task.getTotalSegment.isPresent && !task.getSegment.isPresent)
       task.getTotalSegment.get()
@@ -39,10 +41,16 @@ case class DynamodbScanOperation(task: DynamodbScanOperation.Task) {
       )
   }
 
-  def newRequest: ScanRequest = {
+  private def newRequest: ScanRequest = {
     new ScanRequest()
-      .tap(r => DynamodbOperationCommonOptions.configureRequest(r, task))
+      .tap(configureRequest)
       .tap(r => task.getSegment.ifPresent(v => r.setSegment(v)))
       .tap(r => task.getTotalSegment.ifPresent(v => r.setTotalSegments(v)))
   }
+
+  override def run(
+      dynamodb: AmazonDynamoDB,
+      embulkTaskIndex: Int,
+      f: List[Map[String, AttributeValue]] => Unit
+  ): Unit = {}
 }

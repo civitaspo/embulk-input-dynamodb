@@ -14,7 +14,7 @@ import org.embulk.input.dynamodb.item.DynamodbAttributeValue
 import scala.jdk.CollectionConverters._
 import scala.language.reflectiveCalls
 
-object DynamodbOperationCommonOptions {
+object AbstractDynamodbOperation {
 
   trait Task extends EmbulkTask {
 
@@ -81,7 +81,7 @@ object DynamodbOperationCommonOptions {
     def setTableName(tableName: String): Unit
   }
 
-  private type RequestBuilderMethods = {
+  type RequestBuilderMethods = {
     def setConsistentRead(v: JBoolean): Unit
     def setExclusiveStartKey(v: JMap[JString, AttributeValue]): Unit
     def setExpressionAttributeNames(v: JMap[JString, JString]): Unit
@@ -95,7 +95,17 @@ object DynamodbOperationCommonOptions {
     def setTableName(v: JString): Unit
   }
 
-  def configureRequest[A <: RequestBuilderMethods](req: A, task: Task): Unit = {
+}
+
+abstract class AbstractDynamodbOperation(
+    task: AbstractDynamodbOperation.Task
+) extends EmbulkDynamodbOperation {
+
+  protected def configureRequest[
+      A <: AbstractDynamodbOperation.RequestBuilderMethods
+  ](
+      req: A
+  ): Unit = {
     def attributeValueTaskToAttributeValue(
         x: (String, DynamodbAttributeValue.Task)
     ): (String, AttributeValue) = {
@@ -125,5 +135,4 @@ object DynamodbOperationCommonOptions {
     task.getSelect.ifPresent(req.setSelect)
     req.setTableName(task.getTableName)
   }
-
 }
