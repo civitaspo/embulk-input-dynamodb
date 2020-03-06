@@ -217,7 +217,25 @@ case class DynamodbAttributeValueEmbulkTypeTransformable(
   }
 
   def asString: Option[String] = {
-    asMessagePack.map(_.toJson)
+    if (!hasAttributeValueType) return None
+    if (attributeValue.isNull) return None
+
+    Option(fromAttributeValueType match {
+      case DynamodbAttributeValueType.S    => attributeValue.getS
+      case DynamodbAttributeValueType.N    => attributeValue.getN
+      case DynamodbAttributeValueType.B    => convertBAsString(attributeValue.getB)
+      case DynamodbAttributeValueType.SS   => asMessagePack.map(_.toJson).get
+      case DynamodbAttributeValueType.NS   => asMessagePack.map(_.toJson).get
+      case DynamodbAttributeValueType.BS   => asMessagePack.map(_.toJson).get
+      case DynamodbAttributeValueType.M    => asMessagePack.map(_.toJson).get
+      case DynamodbAttributeValueType.L    => asMessagePack.map(_.toJson).get
+      case DynamodbAttributeValueType.BOOL => attributeValue.getBOOL.toString
+      case _ =>
+        logger.warn(
+          s"Unsupported AttributeValue: ${attributeValue.getOriginal.toString}"
+        )
+        return None
+    })
   }
 
   def asTimestamp: Option[Timestamp] = {
