@@ -97,6 +97,11 @@ object DynamodbAttributeValue {
   def apply(original: AttributeValue): DynamodbAttributeValue = {
     new DynamodbAttributeValue(original)
   }
+
+  def apply(item: Map[String, AttributeValue]): DynamodbAttributeValue = {
+    val original = new AttributeValue().withM(item.asJava)
+    new DynamodbAttributeValue(original)
+  }
 }
 
 class DynamodbAttributeValue(original: AttributeValue) {

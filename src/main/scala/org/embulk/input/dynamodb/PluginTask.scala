@@ -186,6 +186,7 @@ object PluginTask {
     override def getDefaultTimestampFormat: String =
       task.getDefaultTimestampFormat
     override def getDefaultDate: String = task.getDefaultDate
+    override def getJsonColumnName: String = task.getJsonColumnName
   }
 
   def load(configSource: ConfigSource): PluginTask = {

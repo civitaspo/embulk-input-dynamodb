@@ -2,10 +2,11 @@ package org.embulk.input.dynamodb.item
 
 import java.util.{Optional, List => JList}
 
+import com.amazonaws.services.dynamodbv2.model.AttributeValue
 import com.fasterxml.jackson.annotation.{JsonCreator, JsonValue}
 import org.embulk.config.{Config, ConfigDefault, Task => EmbulkTask}
-import org.embulk.spi.{Column, Schema}
-import org.embulk.spi.`type`.Type
+import org.embulk.spi.{Column, PageBuilder, Schema}
+import org.embulk.spi.`type`.{Type, Types}
 import org.embulk.spi.time.TimestampParser
 
 import scala.jdk.CollectionConverters._
@@ -50,9 +51,15 @@ object DynamodbItemSchema {
           }
         }
         .build()
+
+    def isEmpty: Boolean = columnTasks.isEmpty
   }
 
   trait Task extends EmbulkTask with TimestampParser.Task {
+
+    @Config("json_column_name")
+    @ConfigDefault("\"payload\"")
+    def getJsonColumnName: String
 
     @Config("columns")
     @ConfigDefault("[]")
@@ -64,7 +71,13 @@ object DynamodbItemSchema {
 case class DynamodbItemSchema(task: DynamodbItemSchema.Task) {
 
   // TODO: build in this class after removing SchemaConfigCompat.
-  private lazy val embulkSchema: Schema = task.getColumns.toSchema
+  private lazy val embulkSchema: Schema =
+    if (!isItemAsJson) task.getColumns.toSchema
+    else
+      Schema
+        .builder()
+        .add(task.getJsonColumnName, Types.JSON)
+        .build()
 
   private lazy val timestampParsers: Map[String, TimestampParser] =
     task.getColumns.columnTasks.map { columnTask =>
@@ -107,4 +120,16 @@ case class DynamodbItemSchema(task: DynamodbItemSchema.Task) {
 
   def getEmbulkColumn(columnIndex: Int): Option[Column] =
     Try(getEmbulkSchema.getColumn(columnIndex)).toOption
+
+  def isItemAsJson: Boolean = task.getColumns.isEmpty
+
+  def visitColumns(visitor: DynamodbItemColumnVisitor): Unit =
+    getEmbulkSchema.visitColumns(visitor)
+
+  def getItemsConsumer(
+      pageBuilder: PageBuilder
+  ): Seq[Map[String, AttributeValue]] => Unit = {
+    if (isItemAsJson) DynamodbItemConsumer.consumeItemsAsJson(this, pageBuilder)
+    else DynamodbItemConsumer.consumeItemsByEmbulkSchema(this, pageBuilder)
+  }
 }
