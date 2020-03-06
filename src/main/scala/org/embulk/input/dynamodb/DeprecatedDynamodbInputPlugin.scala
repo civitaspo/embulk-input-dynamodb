@@ -2,7 +2,13 @@ package org.embulk.input.dynamodb
 
 import java.util.{List => JList}
 
-import org.embulk.config.{ConfigDiff, ConfigSource, TaskReport, TaskSource}
+import org.embulk.config.{
+  ConfigDiff,
+  ConfigException,
+  ConfigSource,
+  TaskReport,
+  TaskSource
+}
 import org.embulk.input.dynamodb.aws.Aws
 import org.embulk.input.dynamodb.deprecated.ope.{QueryOperation, ScanOperation}
 import org.embulk.spi.{Exec, InputPlugin, PageOutput, Schema}
@@ -16,6 +22,8 @@ object DeprecatedDynamodbInputPlugin extends InputPlugin {
   ): ConfigDiff = {
     val task: PluginTask = PluginTask.load(config)
     val schema: Schema = task.getColumns.toSchema
+    if (schema.isEmpty)
+      throw new ConfigException("\"columns\" option must be set.")
     val taskCount: Int = 1
 
     control.run(task.dump(), schema, taskCount)
