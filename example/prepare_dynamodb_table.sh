@@ -49,6 +49,7 @@ aws dynamodb put-item \
         "primary-key" : { "S" : "key-1" },
         "sort-key" : { "N" : "1" },
         "doubleValue" : { "NULL" : true },
+        "boolValue" : { "N" : "1" },
         "listValue" : { "L":
             [
                 { "NULL" : true},
