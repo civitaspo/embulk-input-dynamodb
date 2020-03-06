@@ -22,8 +22,7 @@ import scala.jdk.CollectionConverters._
 
 class DynamodbScanOperationTest extends EmbulkTestBase {
 
-  @Test
-  def scanTest(): Unit = {
+  private def testBackwardCompatibility(embulkInConfig: ConfigSource): Unit = {
     cleanupTable("EMBULK_DYNAMODB_TEST_TABLE")
     withDynamodb { dynamodb =>
       dynamodb.createTable(
@@ -89,27 +88,10 @@ class DynamodbScanOperationTest extends EmbulkTestBase {
       )
     }
 
-    val inConfig: ConfigSource = embulk.configLoader().fromYamlString(s"""
-         |type: dynamodb
-         |end_point: http://${dynamoDBHost}:${dynamoDBPort}/
-         |table: EMBULK_DYNAMODB_TEST_TABLE
-         |auth_method: basic
-         |access_key: dummy
-         |secret_key: dummy
-         |operation: scan
-         |columns:
-         |  - {name: pri-key,     type: string}
-         |  - {name: sort-key,    type: long}
-         |  - {name: doubleValue, type: double}
-         |  - {name: boolValue,   type: boolean}
-         |  - {name: listValue,   type: json}
-         |  - {name: mapValue,    type: json}
-         |""".stripMargin)
-
     val path = embulk.createTempFile("csv")
     val result = embulk
       .inputBuilder()
-      .in(inConfig)
+      .in(embulkInConfig)
       .outputPath(path)
       .preview()
 
@@ -150,5 +132,50 @@ class DynamodbScanOperationTest extends EmbulkTestBase {
         .asLong(),
       is(456L)
     )
+  }
+
+  @Test
+  def deprecatedScanOperationTest(): Unit = {
+
+    val inConfig: ConfigSource = embulk.configLoader().fromYamlString(s"""
+        |type: dynamodb
+        |end_point: http://${dynamoDBHost}:${dynamoDBPort}/
+        |table: EMBULK_DYNAMODB_TEST_TABLE
+        |auth_method: basic
+        |access_key: dummy
+        |secret_key: dummy
+        |operation: scan
+        |columns:
+        |  - {name: pri-key,     type: string}
+        |  - {name: sort-key,    type: long}
+        |  - {name: doubleValue, type: double}
+        |  - {name: boolValue,   type: boolean}
+        |  - {name: listValue,   type: json}
+        |  - {name: mapValue,    type: json}
+        |""".stripMargin)
+
+    testBackwardCompatibility(inConfig)
+  }
+
+  @Test
+  def keepTheSameBehaviourAsDeprecatedScanOperationTest(): Unit = {
+    val inConfig: ConfigSource = embulk.configLoader().fromYamlString(s"""
+        |type: dynamodb
+        |endpoint: http://${dynamoDBHost}:${dynamoDBPort}/
+        |table: EMBULK_DYNAMODB_TEST_TABLE
+        |auth_method: basic
+        |access_key: dummy
+        |secret_key: dummy
+        |scan: {}
+        |columns:
+        |  - {name: pri-key,     type: string}
+        |  - {name: sort-key,    type: long}
+        |  - {name: doubleValue, type: double}
+        |  - {name: boolValue,   type: boolean}
+        |  - {name: listValue,   type: json}
+        |  - {name: mapValue,    type: json}
+        |""".stripMargin)
+
+    testBackwardCompatibility(inConfig)
   }
 }
