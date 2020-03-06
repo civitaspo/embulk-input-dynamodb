@@ -5,6 +5,7 @@ import java.util.Optional
 import com.amazonaws.services.dynamodbv2.model.{AttributeValue, ScanRequest}
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
 import org.embulk.config.{Config, ConfigDefault, ConfigException}
+import org.embulk.input.dynamodb.logger
 
 import scala.jdk.CollectionConverters._
 import scala.util.chaining._
@@ -63,7 +64,10 @@ case class DynamodbScanOperation(task: DynamodbScanOperation.Task)
   ): Unit = {
     val loadableRecords: Option[Long] = calculateLoadableRecords(loadedRecords)
 
-    val result = dynamodb.scan(newRequest(embulkTaskIndex, lastEvaluatedKey))
+    val result =
+      dynamodb.scan(newRequest(embulkTaskIndex, lastEvaluatedKey).tap { req =>
+        logger.info(s"Call DynamodbQueryRequest: ${req.toString}")
+      })
     loadableRecords match {
       case Some(v) if (result.getCount > v) =>
         f(result.getItems.asScala.take(v.toInt).map(_.asScala.toMap).toSeq)
