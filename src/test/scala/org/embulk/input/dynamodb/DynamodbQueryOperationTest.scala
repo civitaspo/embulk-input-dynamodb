@@ -1,4 +1,4 @@
-package org.embulk.input.dynamodb.deprecated.ope
+package org.embulk.input.dynamodb
 
 import com.amazonaws.services.dynamodbv2.model.{
   AttributeDefinition,
@@ -20,7 +20,7 @@ import org.msgpack.value.Value
 
 import scala.jdk.CollectionConverters._
 
-class QueryOperationTest extends EmbulkTestBase {
+class DynamodbQueryOperationTest extends EmbulkTestBase {
 
   @Test
   def queryTest(): Unit = {
