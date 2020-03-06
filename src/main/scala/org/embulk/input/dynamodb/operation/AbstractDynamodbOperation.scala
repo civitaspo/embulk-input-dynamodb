@@ -8,7 +8,12 @@ import com.amazonaws.services.dynamodbv2.model.{
   ReturnConsumedCapacity,
   Select
 }
-import org.embulk.config.{Config, ConfigDefault, Task => EmbulkTask}
+import org.embulk.config.{
+  Config,
+  ConfigDefault,
+  ConfigException,
+  Task => EmbulkTask
+}
 import org.embulk.input.dynamodb.item.DynamodbAttributeValue
 
 import scala.jdk.CollectionConverters._
@@ -142,7 +147,13 @@ abstract class AbstractDynamodbOperation(
       )
     task.getFilterExpression.ifPresent(req.setFilterExpression)
     task.getIndexName.ifPresent(req.setIndexName)
-    task.getBatchSize.ifPresent(v => req.setLimit(JInteger.valueOf(v))) // Note: Use BatchSize for the limit per a request.
+    task.getBatchSize.ifPresent { v =>
+      if (v <= 0)
+        throw new ConfigException(
+          "\"batch_size\" must be greater than or equal to 1."
+        )
+      req.setLimit(JInteger.valueOf(v)) // Note: Use BatchSize for the limit per a request.
+    }
     task.getProjectionExpression.ifPresent(req.setProjectionExpression)
     task.getReturnConsumedCapacity.ifPresent(req.setReturnConsumedCapacity)
     task.getSelect.ifPresent(req.setSelect)
