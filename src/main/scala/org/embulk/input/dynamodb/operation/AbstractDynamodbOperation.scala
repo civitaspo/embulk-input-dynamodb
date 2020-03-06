@@ -1,6 +1,11 @@
 package org.embulk.input.dynamodb.operation
 
-import java.lang.{Boolean => JBoolean, Integer => JInteger, String => JString}
+import java.lang.{
+  Boolean => JBoolean,
+  Integer => JInteger,
+  Long => JLong,
+  String => JString
+}
 import java.util.{Optional, Map => JMap}
 
 import com.amazonaws.services.dynamodbv2.model.{
@@ -64,7 +69,7 @@ object AbstractDynamodbOperation {
     // NOTE: This limit is total records limit, not the limit of Query/Scan request.
     @Config("limit")
     @ConfigDefault("null")
-    def getLimit: Optional[Long]
+    def getLimit: Optional[JLong]
 
     // ref. https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Expressions.ProjectionExpressions.html
     @Config("projection_expression")
