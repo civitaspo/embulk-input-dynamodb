@@ -197,7 +197,7 @@ You can see more examples [here](./example).
 $ ./run_dynamodb_local.sh
 $ ./example/prepare_dynamodb_table.sh
 $ ./gradlew classpath
-$ embulk run example/config.yml -Ilib
+$ embulk run example/config-query.yml -Ilib
 ```
 
 ### Run tests
