@@ -165,5 +165,10 @@ object PluginTask {
         "Either \"scan\" or \"query\" option is required."
       )
     }
+    if (task.getOperation.isPresent && (task.getScan.isPresent || task.getQuery.isPresent)) {
+      throw new ConfigException(
+        "[Deprecated] You must not use \"scan\" or \"query\" option with \"operation\" option."
+      )
+    }
   }
 }
