@@ -105,6 +105,16 @@ object DynamodbAttributeValue {
 }
 
 class DynamodbAttributeValue(original: AttributeValue) {
+
+  require(
+    message =
+      s"Invalid AttributeValue: ${original} which must have 1 attribute value.",
+    requirement = {
+      Seq(hasS, hasN, hasB, hasSS, hasNS, hasBS, hasM, hasL, hasNULL, hasBOOL)
+        .count(has => has) == 1
+    }
+  )
+
   def getOriginal: AttributeValue = original
   def isNull: Boolean = Option[Boolean](getOriginal.getNULL).getOrElse(false)
   def hasS: Boolean = Option(getOriginal.getS).isDefined
