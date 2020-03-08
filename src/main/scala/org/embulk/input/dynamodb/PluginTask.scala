@@ -14,11 +14,7 @@ import org.embulk.config.{
 import org.embulk.input.dynamodb.aws.Aws
 import org.embulk.input.dynamodb.deprecated.Filter
 import org.embulk.input.dynamodb.item.DynamodbItemSchema
-import org.embulk.input.dynamodb.operation.{
-  DynamodbOperationProxy,
-  DynamodbQueryOperation,
-  DynamodbScanOperation
-}
+import org.embulk.input.dynamodb.operation.DynamodbOperationProxy
 import org.embulk.spi.BufferAllocator
 import zio.macros.annotation.delegate
 
@@ -65,9 +61,6 @@ trait PluginTask
   @ConfigDefault("0")
   def getRecordLimit: Long
 
-  @Config("table")
-  def getTable: String
-
   @deprecated(
     message =
       "Use DynamodbQueryOperation.Task#getFilterExpression() or DynamodbScanOperation.Task#getFilterExpression() instead.",
@@ -76,14 +69,6 @@ trait PluginTask
   @Config("filters")
   @ConfigDefault("null")
   def getFilters: Optional[Filter]
-
-  @Config("scan")
-  @ConfigDefault("null")
-  def getScan: Optional[DynamodbScanOperation.Task]
-
-  @Config("query")
-  @ConfigDefault("null")
-  def getQuery: Optional[DynamodbQueryOperation.Task]
 
   @ConfigInject
   def getBufferAllocator: BufferAllocator
