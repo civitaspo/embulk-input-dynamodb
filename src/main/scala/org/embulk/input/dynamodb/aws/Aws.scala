@@ -12,7 +12,7 @@ object Aws {
       extends AwsCredentials.Task
       with AwsEndpointConfiguration.Task
       with AwsClientConfiguration.Task
-      with AwsDynamoDBConfiguration.Task
+      with AwsDynamodbConfiguration.Task
 
   def apply(task: Task): Aws = {
     new Aws(task)
@@ -22,10 +22,10 @@ object Aws {
 
 class Aws(task: Aws.Task) {
 
-  def withDynamoDB[A](f: AmazonDynamoDB => A): A = {
+  def withDynamodb[A](f: AmazonDynamoDB => A): A = {
     val builder: AmazonDynamoDBClientBuilder =
       AmazonDynamoDBClientBuilder.standard()
-    AwsDynamoDBConfiguration(task).configureAmazonDynamoDBClientBuilder(builder)
+    AwsDynamodbConfiguration(task).configureAmazonDynamoDBClientBuilder(builder)
     val svc = createService(builder)
     try f(svc)
     finally svc.shutdown()

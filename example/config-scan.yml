@@ -1,0 +1,18 @@
+in:
+  type: dynamodb
+  region: us-east-1
+  endpoint: http://localhost:8000
+  scan:
+    total_segment: 20
+  table: embulk-input-dynamodb_example
+  auth_method: basic
+  access_key_id: dummy
+  secret_access_key: dummy
+  columns:
+    - {name: primary-key,  type: string}
+    - {name: sort-key, type: long}
+    - {name: value, type: string}
+
+out:
+  type: stdout
+

@@ -1,4 +1,4 @@
-package org.embulk.input.dynamodb
+package org.embulk.input.dynamodb.deprecated
 
 import java.util.{List => JList}
 

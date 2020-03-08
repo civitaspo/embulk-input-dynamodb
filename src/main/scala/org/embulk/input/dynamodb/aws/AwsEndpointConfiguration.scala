@@ -8,6 +8,7 @@ import com.amazonaws.regions.{DefaultAwsRegionProviderChain, Regions}
 import org.embulk.config.{Config, ConfigDefault, ConfigException}
 import org.embulk.input.dynamodb.aws.AwsEndpointConfiguration.Task
 import org.embulk.input.dynamodb.logger
+import zio.macros.annotation.delegate
 
 import scala.util.Try
 
@@ -29,28 +30,27 @@ object AwsEndpointConfiguration {
     def getRegion: Optional[String]
   }
 
-  case class TaskCompat(task: Task) extends Task {
-    override def getEndPoint: Optional[String] = throw new NotImplementedError()
-
-    override def getEndpoint: Optional[String] = {
-      if (task.getEndpoint.isPresent && task.getEndPoint.isPresent)
-        throw new ConfigException(
-          "You cannot use both \"endpoint\" option and \"end_point\" option. Use \"endpoint\" option."
-        )
-      if (task.getEndPoint.isPresent) {
-        logger.warn(
-          "[Deprecated] \"end_point\" option is deprecated. Use \"endpoint\" option instead."
-        )
-        return task.getEndPoint
-      }
-      task.getEndpoint
-    }
-
-    override def getRegion: Optional[String] = task.getRegion
-  }
-
   def apply(task: Task): AwsEndpointConfiguration = {
-    new AwsEndpointConfiguration(TaskCompat(task))
+    new AwsEndpointConfiguration(AwsEndpointConfigurationTaskCompat(task))
+  }
+}
+
+case class AwsEndpointConfigurationTaskCompat(@delegate task: Task)
+    extends Task {
+  override def getEndPoint: Optional[String] = throw new NotImplementedError()
+
+  override def getEndpoint: Optional[String] = {
+    if (task.getEndpoint.isPresent && task.getEndPoint.isPresent)
+      throw new ConfigException(
+        "You cannot use both \"endpoint\" option and \"end_point\" option. Use \"endpoint\" option."
+      )
+    if (task.getEndPoint.isPresent) {
+      logger.warn(
+        "[Deprecated] \"end_point\" option is deprecated. Use \"endpoint\" option instead."
+      )
+      return task.getEndPoint
+    }
+    task.getEndpoint
   }
 }
 

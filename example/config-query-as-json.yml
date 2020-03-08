@@ -1,0 +1,18 @@
+in:
+  type: dynamodb
+  region: us-east-1
+  endpoint: http://localhost:8000
+  query:
+    key_condition_expression: "#x = :v"
+    expression_attribute_names:
+      "#x": primary-key
+    expression_attribute_values:
+      ":v": {S: key-1}
+  table: embulk-input-dynamodb_example
+  auth_method: basic
+  access_key_id: dummy
+  secret_access_key: dummy
+
+out:
+  type: stdout
+

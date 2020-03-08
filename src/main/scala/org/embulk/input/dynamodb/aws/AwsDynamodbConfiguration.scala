@@ -4,9 +4,9 @@ import java.util.Optional
 
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder
 import org.embulk.config.{Config, ConfigDefault}
-import org.embulk.input.dynamodb.aws.AwsDynamoDBConfiguration.Task
+import org.embulk.input.dynamodb.aws.AwsDynamodbConfiguration.Task
 
-object AwsDynamoDBConfiguration {
+object AwsDynamodbConfiguration {
 
   trait Task {
 
@@ -16,12 +16,12 @@ object AwsDynamoDBConfiguration {
 
   }
 
-  def apply(task: Task): AwsDynamoDBConfiguration = {
-    new AwsDynamoDBConfiguration(task)
+  def apply(task: Task): AwsDynamodbConfiguration = {
+    new AwsDynamodbConfiguration(task)
   }
 }
 
-class AwsDynamoDBConfiguration(task: Task) {
+class AwsDynamodbConfiguration(task: Task) {
 
   def configureAmazonDynamoDBClientBuilder(
       builder: AmazonDynamoDBClientBuilder

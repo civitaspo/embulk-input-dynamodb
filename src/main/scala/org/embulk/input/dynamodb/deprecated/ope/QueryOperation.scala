@@ -1,4 +1,4 @@
-package org.embulk.input.dynamodb.ope
+package org.embulk.input.dynamodb.deprecated.ope
 
 import java.util.{List => JList, Map => JMap}
 

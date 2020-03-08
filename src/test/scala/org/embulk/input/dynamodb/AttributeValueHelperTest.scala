@@ -5,7 +5,7 @@ import java.{util => JUtil}
 
 import com.amazonaws.services.dynamodbv2.model.AttributeValue
 import com.fasterxml.jackson.databind.ObjectMapper
-import org.embulk.input.dynamodb.AttributeValueHelper._
+import org.embulk.input.dynamodb.deprecated.AttributeValueHelper._
 import org.hamcrest.CoreMatchers._
 import org.hamcrest.MatcherAssert.assertThat
 import org.junit.Assert._

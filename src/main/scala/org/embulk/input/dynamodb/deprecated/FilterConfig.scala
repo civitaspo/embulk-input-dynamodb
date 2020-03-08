@@ -1,4 +1,4 @@
-package org.embulk.input.dynamodb
+package org.embulk.input.dynamodb.deprecated
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.google.common.base.Objects

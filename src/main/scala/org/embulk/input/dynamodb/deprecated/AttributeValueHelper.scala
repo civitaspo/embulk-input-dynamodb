@@ -1,4 +1,4 @@
-package org.embulk.input.dynamodb
+package org.embulk.input.dynamodb.deprecated
 
 import com.amazonaws.services.dynamodbv2.model.AttributeValue
 import org.msgpack.value.{Value, ValueFactory}

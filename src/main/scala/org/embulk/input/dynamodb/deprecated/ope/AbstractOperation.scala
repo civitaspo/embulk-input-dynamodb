@@ -1,7 +1,8 @@
-package org.embulk.input.dynamodb.ope
+package org.embulk.input.dynamodb.deprecated.ope
 
 import com.amazonaws.services.dynamodbv2.model.{AttributeValue, Condition}
-import org.embulk.input.dynamodb.{AttributeValueHelper, PluginTask}
+import org.embulk.input.dynamodb.PluginTask
+import org.embulk.input.dynamodb.deprecated.AttributeValueHelper
 import org.embulk.spi._
 import org.embulk.spi.`type`.Types
 import org.msgpack.value.{Value, ValueFactory}
@@ -26,7 +27,7 @@ abstract class AbstractOperation {
   def createFilters(task: PluginTask): Map[String, Condition] = {
     val filterMap = collection.mutable.HashMap[String, Condition]()
 
-    Option(task.getFilters.orNull).map { filters =>
+    Option(task.getFilters.orElse(null)).map { filters =>
       filters.getFilters.asScala.map { filter =>
         val attributeValueList =
           collection.mutable.ArrayBuffer[AttributeValue]()
@@ -100,10 +101,10 @@ abstract class AbstractOperation {
     value.map(_.getS).getOrElse("")
 
   implicit def LongConvert(value: Option[AttributeValue]): Long =
-    value.map(_.getN.toLong).getOrElse(0L)
+    value.map(_.getN).flatMap(Option(_)).map(_.toLong).getOrElse(0L)
 
   implicit def DoubleConvert(value: Option[AttributeValue]): Double =
-    value.map(_.getN.toDouble).getOrElse(0d)
+    value.map(_.getN).flatMap(Option(_)).map(_.toDouble).getOrElse(0d)
 
   implicit def BooleanConvert(value: Option[AttributeValue]): Boolean =
     value.exists(_.getBOOL)
