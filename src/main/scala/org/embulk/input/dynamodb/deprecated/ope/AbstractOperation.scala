@@ -101,10 +101,10 @@ abstract class AbstractOperation {
     value.map(_.getS).getOrElse("")
 
   implicit def LongConvert(value: Option[AttributeValue]): Long =
-    value.map(_.getN.toLong).getOrElse(0L)
+    value.map(_.getN).flatMap(Option(_)).map(_.toLong).getOrElse(0L)
 
   implicit def DoubleConvert(value: Option[AttributeValue]): Double =
-    value.map(_.getN.toDouble).getOrElse(0d)
+    value.map(_.getN).flatMap(Option(_)).map(_.toDouble).getOrElse(0d)
 
   implicit def BooleanConvert(value: Option[AttributeValue]): Boolean =
     value.exists(_.getBOOL)
