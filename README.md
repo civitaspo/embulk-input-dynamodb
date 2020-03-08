@@ -110,7 +110,7 @@ Here is the explanation of the configuration for **scan** option or **query** op
 
 #### About `DynamodbAttributeValue` Type
 
-This type of `DynamodbAttributeValue` is one that can express Dynamodb `AttributeValue` as Embulk configuration. This configuration has the belowe options. Only one of these options can be set.
+This type of `DynamodbAttributeValue` is one that can express Dynamodb `AttributeValue` as Embulk configuration. This configuration has the below options. Only one of these options can be set.
 
 - **S**: string value (string, optional)
 - **N**: number value. (string, optional)
@@ -139,10 +139,10 @@ You can use the below options yet for the backward compatibility before `v0.3.0`
 - **limit**: *[Deprecated: Use **query.batch_size** option or **query.batch_size** instead]* DynamoDB 1-time Scan/Query Operation size limit (int, optional)
 - **scan_limit**: *[Deprecated: Use **query.batch_size** option or **query.batch_size** instead]* DynamoDB 1-time Scan Query size limit (int, optional)
 - **record_limit**: *[Deprecated: Use **query.limit** option or **query.limit** instead]* Max Record Search limit (long, optional)
-- **columns**: [Deprecated: This **columns** option for the deprecated operation. See the above **columns** option when using a new operation.] a key-value pairs where key is a column name and value is options for the column (required)
+- **columns**: *[Deprecated: This **columns** option for the deprecated operation. See the above **columns** option when using a new operation.]* a key-value pairs where key is a column name and value is options for the column (required)
   - **name**: Column name. (string, required)
   - **type**: Column values are converted to this embulk type. (`"boolean"`, `"long"`, `"double"`, `"string"`, `"json"`, required)
-      - NOTE: Be careful that storing values is skipped when you specify `"timestamp"`.
+    - NOTE: Be careful that storing values is skipped when you specify `"timestamp"`.
 
 ## Example
 
