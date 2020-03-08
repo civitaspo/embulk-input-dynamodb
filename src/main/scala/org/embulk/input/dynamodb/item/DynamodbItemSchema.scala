@@ -58,7 +58,7 @@ object DynamodbItemSchema {
   trait Task extends EmbulkTask with TimestampParser.Task {
 
     @Config("json_column_name")
-    @ConfigDefault("\"payload\"")
+    @ConfigDefault("\"record\"")
     def getJsonColumnName: String
 
     @Config("columns")
