@@ -34,6 +34,8 @@ object AbstractDynamodbOperation {
     @ConfigDefault("false")
     def getConsistentRead: Boolean
 
+    // ref. https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Scan.html#Scan.Pagination
+    // ref. https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Query.Pagination.html
     @Config("exclusive_start_key")
     @ConfigDefault("{}")
     def getExclusiveStartKey: JMap[String, DynamodbAttributeValue.Task]

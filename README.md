@@ -34,12 +34,10 @@
     1. `"web_identity_token"`
     1. `"profile"`
     1. `"instance"`
-- **profile_file**: path to a profiles file. this is optionally used when **auth_method** is `"profile"`. (string, default: given by `AWS_CREDENTIAL_PROFILES_FILE` environment variable, or ~/.aws/credentials).
+- **profile_file**: path to a profile file. this is optionally used when **auth_method** is `"profile"`. (string, default: given by `AWS_CREDENTIAL_PROFILES_FILE` environment variable, or ~/.aws/credentials).
 - **profile_name**: name of a profile. this is optionally used when **auth_method** is `"profile"`. (string, default: `"default"`)
 - **access_key_id**: aws access key id. this is required when **auth_method** is `"basic"` or `"session"`. (string, optional)
-  - You can use this option as **access_key**, but this name is deprecated.
 - **secret_access_key**: aws secret access key. this is required when **auth_method** is `"basic"` or `"session"`. (string, optional)
-  - You can use this option as **secret_key**, but this name is deprecated.
 - **session_token**: aws session token. this is required when **auth_method** is `"session"`. (string, optional)
 - **role_arn**: arn of the role to assume. this is required for **auth_method** is `"assume_role"` or `"web_identity_token"`. (string, optional)
 - **role_session_name**: an identifier for the assumed role session. this is required when **auth_method** is `"assume_role"` or `"web_identity_token"`. (string, optional)
@@ -48,7 +46,6 @@
 - **web_identity_token_file**: the absolute path to the web identity token file. this is required when **auth_method** is `"web_identity_token"`. (string, optional)
 - **scope_down_policy**: an iam policy in json format. this is optionally used for **auth_method**: `"assume_role"`. (string, optional)
 - **endpoint**: The AWS Service endpoint (string, optional)
-  - You can use this option as **end_point**, but this name is deprecated.
 - **region**: The AWS region (string, optional)
 - **http_proxy**: Indicate whether using when accessing AWS via http proxy. (optional)
   - **host** proxy host (string, required)
@@ -56,22 +53,96 @@
   - **protocol** proxy protocol (string, default: `"https"`)
   - **user** proxy user (string, optional)
   - **password** proxy password (string, optional)
-- **operation**: Operation Type (string, required)  
-Available types are: `scan`, `query`
+- **scan**: scan operation configuration. This option cannot be used with **query** option. (See [Operation Configuration Details](#operation-configuration-details), optional)
+- **query**: query operation configuration. This option cannot be used with **scan** option. (See [Operation Configuration Details](#operation-configuration-details), optional)
 - **table**: Table Name (string, required)
-- **filters**: Query Filters  
-Required to `query` operation. Optional for `scan`.  
+- **default_timestamp_format**: Format of the timestamp if **columns.type** is `"timestamp"`. (string, optional, default: `"%Y-%m-%d %H:%M:%S.%N %z"`)
+- **default_timezone**: Time zone of timestamp columns if the value itself doesn’t include time zone description (eg. Asia/Tokyo). (string, optional, default: `"UTC"`)
+- **default_date**: Set date part if the format doesn’t include date part. (string, optional, default: `"1970-01-01"`)
+- **columns**: a key-value pairs where key is a column name and value is options for the column. If you do not specify this option, each dynamodb items are processed as a single json. (array of string-to-string map, optional, default: `[]`)
+  - **name**: Name of the column. (string, required)
+  - **type**: Embulk Type of the column that is converted to from dynamodb attribute value as possible. (`"boolean"`, `"long"`,`"timestamp"`, `"double"`, `"string"` or `"json"`, required)
+  - **attribute_type**: Type of the Dynamodb attribute that name matches **name** of the column. The types except specified one are stored as `null` when this option is specified. (`"S"`, `"N"`, `"B"`, `"SS"`, `"NS"`, `"BS"`, `"M"`, `"L"`, `"NULL"` or `"BOOL"`, optional)
+  - **format**: Format of the timestamp if **type** is `"timestamp"`. (string, optional, default value is specified by **default_timestamp_format**)
+  - **timezone**: Timezone of the timestamp if the value itself doesn’t include time zone description (eg. Asia/Tokyo). (string, optional, default value is specified by **default_timezone**)
+  - **date**: Set date part if the **format** doesn’t include date part. (string, optional, default value is specified by **default_date**)
+- **json_column_name**: Name of the column when each dynamodb items are processed as a single json. (string, optional, default: `"record"`)
+
+### Operation Configuration Details
+
+Here is the explanation of the configuration for **scan** option or **query** option. The configuration has common options and specific options. Sometimes a type called `DynamodbAttributeValue` appears, see the end of this section first if you are worried about it.
+
+#### Common Options
+
+- **consistent_read**: Require strongly consistent reads or not. ref.  (boolean, optional, default: `false`)
+  - See the docs ([Read Consistency for Scan](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Scan.html#Scan.ReadConsistency) or [Read Consistency for Query](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Query.html#Query.ReadConsistency)) for more details.
+- **exclusive_start_key**: When you want to read the middle of the table, specify the attribute as the start key. (string to `DynamodbAttributeValue` map, optional)
+  - See the docs ([Paginating Table Scan Results](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Scan.html#Scan.Pagination) or [Paginating Table Query Results](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Query.Pagination.html)) for more details.
+- **expression_attribute_names**: An expression attribute name is a placeholder that you use in an Amazon DynamoDB expression as an alternative to an actual attribute name. An expression attribute name must begin with a pound sign (#), and be followed by one or more alphanumeric characters. (string to string map, optional, default: `{}`)
+  - See the doc ([Expression Attribute Names](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Expressions.ExpressionAttributeNames.html)) for more details.
+- **expression_attribute_values**: If you need to compare an attribute with a value, define an expression attribute value as a placeholder. Expression attribute values in Amazon DynamoDB are substitutes for the actual values that you want to compare—values that you might not know until runtime. An expression attribute value must begin with a colon (:) and be followed by one or more alphanumeric characters. (string to `DynamodbAttributeValue` map, optional, default: `{}`)
+  - See the doc ([Expression Attribute Values](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Expressions.ExpressionAttributeValues.html)) for more details.
+- **filter_expression**: A filter expression is applied after the operation finishes, but before the results are returned. Therefore, the operation consumes the same amount of read capacity, regardless of whether a filter expression is present. (string, optional)
+  - See the docs ([Filter Expressions for Scan](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Scan.html#Scan.FilterExpression) or [Filter Expressions for Query](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Query.html#Query.FilterExpression)) for more details.
+- **index_name**: Amazon DynamoDB provides fast access to items in a table by specifying primary key values. However, many applications might benefit from having one or more secondary (or alternate) keys available, to allow efficient access to data with attributes other than the primary key. To address this, you can create one or more secondary indexes on a table and issue **query** or **scan** operations against these indexes. (string, optional)
+  - See the doc ([Improving Data Access with Secondary Indexes](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/SecondaryIndexes.html)) for more details.
+- **batch_size**: The limit of items by an operation. The final result contains specified number of items or fewer when **filter_expression** is specified. (int, optional)
+  - See the docs ([Limiting the Number of Items in the Result Set for Scan](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Scan.html#Scan.Limit) or [Limiting the Number of Items in the Result Set for Query](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Query.html#Query.Limit)) for more details.
+- **limit**: The limit of total items by operations. (long, optional)
+- **projection_expression**: To read data from a table, you use operations. Amazon DynamoDB returns all the item attributes by default. To get only some, rather than all of the attributes, use a projection expression. (string, optional)
+  - See the doc ([Projection Expressions](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Expressions.ProjectionExpressions.html)) for more details.
+- **select**: The attributes to be returned in the result. You can retrieve all item attributes, specific item attributes, the count of matching items, or in the case of an index, some or all of the attributes projected into the index. (`"ALL_ATTRIBUTES"`, `"ALL_PROJECTED_ATTRIBUTES"`, `"SPECIFIC_ATTRIBUTES"` or `"COUNT"`, optional)
+  - See the docs ([Select for Scan](https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_Scan.html#DDB-Scan-request-Select) or [Select for Query](https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_Query.html#DDB-Query-request-Select)) for more details.
+
+#### Options for **scan**
+
+- **segment**: A segment to be scanned by a particular worker. Each worker should use a different value for **segment**. If **segment** is not specified and **total_segment** is specified, this plugin automatically set **segment** following the number of embulk workers. If **segment** and **total_segment** is specified, this plugin loads only the **segment**, so you loads other segments in other processes. (int, optional)
+  - See the doc ([Parallel Scan](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Scan.html#Scan.ParallelScan)) for more details.
+- **total_segment**: The total number of segments for the parallel scan. This value must be the same as the number of workers that your application will use. If **segment** is not specified and **total_segment** is specified, this plugin automatically set **segment** following the number of embulk workers.
+  - See the doc ([Parallel Scan](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Scan.html#Scan.ParallelScan)) for more details.
+
+#### Options for **query**
+
+- **key_condition_expression**: To specify the search criteria, you use a key condition expression—a string that determines the items to be read from the table or index. (string, required)
+  - See the doc ([Key Condition Expression](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Query.html#Query.KeyConditionExpressions)) for more details.
+- **scan_index_forward**: By default, the sort order is ascending. To reverse the order, set this option is `false`. (boolean, optional, default: `false`)
+  - See the doc ([Key Condition Expression](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Query.html#Query.KeyConditionExpressions)) for more details
+
+#### About `DynamodbAttributeValue` Type
+
+This type of `DynamodbAttributeValue` is one that can express Dynamodb `AttributeValue` as Embulk configuration. This configuration has the belowe options. Only one of these options can be set.
+
+- **S**: string value (string, optional)
+- **N**: number value. (string, optional)
+- **B**: binary value. (string, optional)
+- **SS**: array of string value. (array of string, optional)
+- **NS**: array of number value. (array of number, optional)
+- **BS**: array of binary value. (array of binary, optional)
+- **M**: map value. (string to `DynamodbAttributeValue` map, optional)
+- **L**: list value. (array of `DynamodbAttributeValue`, optional)
+- **NULL**: null or not. (boolean, optional)
+- **BOOL**: `true` or `false`. (boolean, optional)
+
+### Deprecated Configuration
+
+You can use the below options yet for the backward compatibility before `v0.3.0`. However, these are already deprecated, so please use new options instead. 
+
+- **access_key**: *[Deprecated: Use **access_key** instead]* aws access key id. this is required when **auth_method** is `"basic"` or `"session"`. (string, optional)
+- **secret_key**: *[Deprecated: Use **secret_access_key** instead]* aws secret access key. this is required when **auth_method** is `"basic"` or `"session"`. (string, optional)
+- **end_point**: *[Deprecated: Use **endpoint** instead]* The AWS Service endpoint (string, optional)
+- **operation**: *[Deprecated: Use **scan** or **query** option instead]* Operation Type (`"scan"` or `"query"`, required)
+- **filters**: *[Deprecated: Use **query.filter_expression** option or **query.filter_expression** instead]* Query Filters. (Required if **operation** is `"query"`, optional if **operation** is `"scan"`)
   - **name**: Column name.
   - **type**: Column type.
   - **condition**: Comparison Operator.
   - **value(s)**: Attribute Value(s).
-- **limit**: DynamoDB 1-time Scan/Query Operation size limit (Int, optional)
-- **scan_limit**: DynamoDB 1-time Scan Query size limit (Deprecated, Int, optional)
-- **record_limit**: Max Record Search limit (Long, optional)
-- **columns**: a key-value pairs where key is a column name and value is options for the column (required)
-  - **name**: Column name.
-  - **type**: Column values are converted to this embulk type.  
-  Available values options are: `boolean`, `long`, `double`, `string`, `json`
+- **limit**: *[Deprecated: Use **query.batch_size** option or **query.batch_size** instead]* DynamoDB 1-time Scan/Query Operation size limit (int, optional)
+- **scan_limit**: *[Deprecated: Use **query.batch_size** option or **query.batch_size** instead]* DynamoDB 1-time Scan Query size limit (int, optional)
+- **record_limit**: *[Deprecated: Use **query.limit** option or **query.limit** instead]* Max Record Search limit (long, optional)
+- **columns**: [Deprecated: This **columns** option for the deprecated operation. See the above **columns** option when using a new operation.] a key-value pairs where key is a column name and value is options for the column (required)
+  - **name**: Column name. (string, required)
+  - **type**: Column values are converted to this embulk type. (`"boolean"`, `"long"`, `"double"`, `"string"`, `"json"`, required)
+      - NOTE: Be careful that storing values is skipped when you specify `"timestamp"`.
 
 ## Example
 
@@ -80,21 +151,18 @@ Required to `query` operation. Optional for `scan`.
 ```yaml
 in:
   type: dynamodb
-  auth_method: basic
-  access_key: YOUR_ACCESS_KEY
-  secret_key: YOUR_SECRET_KEY
-  region: ap-northeast-1
-  operation: scan
-  table: YOUR_TABLE_NAME
+  auth_method: env
+  region: us-east-1
+  scan:
+    total_segment: 20
+  table: embulk-input-dynamodb_example
   columns:
     - {name: ColumnA, type: long}
     - {name: ColumnB, type: double}
-    - {name: ColumnC, type: string}
+    - {name: ColumnC, type: string, attribute_type: S}
     - {name: ColumnD, type: boolean}
-    - {name: ColumnE, type: json}  # DynamoDB Map, List and Set Column Type are json.
-  filters:
-    - {name: ColumnA, type: long, condition: BETWEEN, value: 10000, value2: 20000}
-    - {name: ColumnC, type: string, condition: EQ, value: foobar}
+    - {name: ColumnE, type: timestamp}
+    - {name: ColumnF, type: json}
 
 out:
   type: stdout
@@ -106,21 +174,20 @@ out:
 in:
   type: dynamodb
   auth_method: env
-  region: ap-northeast-1
-  operation: query
-  table: YOUR_TABLE_NAME
-  columns:
-    - {name: ColumnA, type: long}
-    - {name: ColumnB, type: double}
-    - {name: ColumnC, type: string}
-    - {name: ColumnD, type: boolean}
-    - {name: ColumnE, type: json}
-  filters:
-    - {name: ColumnA, type: long, condition: EQ, value: 10000}
+  region: us-east-1
+  query:
+    key_condition_expression: "#x = :v"
+    expression_attribute_names:
+      "#x": primary-key
+    expression_attribute_values:
+      ":v": {S: key-1}
+  table: embulk-input-dynamodb_example
 
 out:
   type: stdout
 ```
+
+You can see more examples [here](./example).
 
 ## Development
 
