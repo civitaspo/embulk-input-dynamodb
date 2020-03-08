@@ -98,7 +98,7 @@ Here is the explanation of the configuration for **scan** option or **query** op
 
 - **segment**: A segment to be scanned by a particular worker. Each worker should use a different value for **segment**. If **segment** is not specified and **total_segment** is specified, this plugin automatically set **segment** following the number of embulk workers. If **segment** and **total_segment** is specified, this plugin loads only the **segment**, so you loads other segments in other processes. (int, optional)
   - See the doc ([Parallel Scan](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Scan.html#Scan.ParallelScan)) for more details.
-- **total_segment**: The total number of segments for the parallel scan. This value must be the same as the number of workers that your application will use. If **segment** is not specified and **total_segment** is specified, this plugin automatically set **segment** following the number of embulk workers.
+- **total_segment**: The total number of segments for the parallel scan. If **segment** is not specified and **total_segment** is specified, this plugin automatically set **segment** following the number of embulk workers.
   - See the doc ([Parallel Scan](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Scan.html#Scan.ParallelScan)) for more details.
 
 #### Options for **query**
