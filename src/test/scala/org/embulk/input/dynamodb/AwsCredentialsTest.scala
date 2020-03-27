@@ -44,16 +44,16 @@ class AwsCredentialsTest extends EmbulkTestBase {
   }
 
   def defaultInConfig: ConfigSource = {
-    embulk.configLoader().fromYamlString(s"""
-                                            |type: dynamodb
-                                            |region: us-east-1
-                                            |table: hoge
-                                            |operation: scan
-                                            |columns:
-                                            |  - {name: key1,   type: string}
-                                            |  - {name: key2,   type: long}
-                                            |  - {name: value1, type: string}
-                                            |""".stripMargin)
+    loadConfigSourceFromYamlString(s"""
+          |type: dynamodb
+          |region: us-east-1
+          |table: hoge
+          |operation: scan
+          |columns:
+          |  - {name: key1,   type: string}
+          |  - {name: key2,   type: long}
+          |  - {name: value1, type: string}
+          |""".stripMargin)
   }
 
   @deprecated(since = "0.3.0")

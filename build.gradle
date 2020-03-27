@@ -31,10 +31,10 @@ dependencies {
     compile "dev.zio:zio-macros-core_2.13:0.6.2"
 
     testCompile "junit:junit:4.+"
+    testCompile "org.embulk:embulk-core:0.9.23:tests"
     testCompile "org.embulk:embulk-standards:0.9.23"
     testCompile "org.embulk:embulk-deps-buffer:0.9.23"
     testCompile "org.embulk:embulk-deps-config:0.9.23"
-    testCompile "org.embulk:embulk-test:0.9.23"
 }
 
 compileScala {
