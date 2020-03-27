@@ -20,7 +20,7 @@ import org.msgpack.value.Value
 
 import scala.jdk.CollectionConverters._
 
-class DynamodbScanOperationTest extends EmbulkTestBase {
+class DynamodbScanOperationBackwardCompatibilityTest extends EmbulkTestBase {
 
   private def testBackwardCompatibility(embulkInConfig: ConfigSource): Unit = {
     cleanupTable("EMBULK_DYNAMODB_TEST_TABLE")
