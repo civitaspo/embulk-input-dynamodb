@@ -6,7 +6,7 @@ import org.embulk.input.dynamodb.aws.AwsCredentials
 import org.embulk.input.dynamodb.testutil.EmbulkTestBase
 import org.hamcrest.CoreMatchers._
 import org.hamcrest.MatcherAssert.assertThat
-import org.junit.{Assume, Test}
+import org.junit.{Assert, Test}
 
 class AwsCredentialsTest extends EmbulkTestBase {
 
@@ -58,18 +58,17 @@ class AwsCredentialsTest extends EmbulkTestBase {
 
   @deprecated(since = "0.3.0")
   @Test
-  def notSetAuthMethod_SetCredentials_deprecated(): Unit = {
-    Assume.assumeTrue(runAwsCredentialsTest)
-    val inConfig: ConfigSource = defaultInConfig
-      .set("access_key", EMBULK_DYNAMODB_TEST_ACCESS_KEY)
-      .set("secret_key", EMBULK_DYNAMODB_TEST_SECRET_KEY)
+  def notSetAuthMethod_SetCredentials_deprecated(): Unit =
+    if (runAwsCredentialsTest) {
+      val inConfig: ConfigSource = defaultInConfig
+        .set("access_key", EMBULK_DYNAMODB_TEST_ACCESS_KEY)
+        .set("secret_key", EMBULK_DYNAMODB_TEST_SECRET_KEY)
 
-    doTest(inConfig)
-  }
+      doTest(inConfig)
+    }
 
   @Test
-  def notSetAuthMethod_SetCredentials(): Unit = {
-    Assume.assumeTrue(runAwsCredentialsTest)
+  def notSetAuthMethod_SetCredentials(): Unit = if (runAwsCredentialsTest) {
     val inConfig: ConfigSource = defaultInConfig
       .set("access_key_id", EMBULK_DYNAMODB_TEST_ACCESS_KEY)
       .set("secret_access_key", EMBULK_DYNAMODB_TEST_SECRET_KEY)
@@ -79,8 +78,7 @@ class AwsCredentialsTest extends EmbulkTestBase {
 
   @deprecated(since = "0.3.0")
   @Test
-  def setAuthMethod_Basic_deprecated(): Unit = {
-    Assume.assumeTrue(runAwsCredentialsTest)
+  def setAuthMethod_Basic_deprecated(): Unit = if (runAwsCredentialsTest) {
     val inConfig: ConfigSource = defaultInConfig
       .set("auth_method", "basic")
       .set("access_key", EMBULK_DYNAMODB_TEST_ACCESS_KEY)
@@ -90,8 +88,7 @@ class AwsCredentialsTest extends EmbulkTestBase {
   }
 
   @Test
-  def setAuthMethod_Basic(): Unit = {
-    Assume.assumeTrue(runAwsCredentialsTest)
+  def setAuthMethod_Basic(): Unit = if (runAwsCredentialsTest) {
     val inConfig: ConfigSource = defaultInConfig
       .set("auth_method", "basic")
       .set("access_key_id", EMBULK_DYNAMODB_TEST_ACCESS_KEY)
@@ -101,42 +98,46 @@ class AwsCredentialsTest extends EmbulkTestBase {
   }
 
   @deprecated(since = "0.3.0")
-  @Test(expected = classOf[ConfigException])
-  def throwIfSetAccessKeyAndAccessKeyId(): Unit = {
-    Assume.assumeTrue(runAwsCredentialsTest)
+  @Test
+  def throwIfSetAccessKeyAndAccessKeyId(): Unit = if (runAwsCredentialsTest) {
     val inConfig: ConfigSource = defaultInConfig
       .set("auth_method", "basic")
       .set("access_key", EMBULK_DYNAMODB_TEST_ACCESS_KEY)
       .set("access_key_id", EMBULK_DYNAMODB_TEST_ACCESS_KEY)
       .set("secret_key", EMBULK_DYNAMODB_TEST_SECRET_KEY)
 
-    doTest(inConfig)
+    Assert.assertThrows(classOf[ConfigException], () => {
+      doTest(inConfig)
+    })
   }
 
   @deprecated(since = "0.3.0")
-  @Test(expected = classOf[ConfigException])
-  def throwIfSetSecretKeyAndSecretAccessKeyId(): Unit = {
-    Assume.assumeTrue(runAwsCredentialsTest)
-    val inConfig: ConfigSource = defaultInConfig
-      .set("auth_method", "basic")
-      .set("access_key", EMBULK_DYNAMODB_TEST_ACCESS_KEY)
-      .set("secret_key", EMBULK_DYNAMODB_TEST_SECRET_KEY)
-      .set("secret_access_key", EMBULK_DYNAMODB_TEST_SECRET_KEY)
+  @Test
+  def throwIfSetSecretKeyAndSecretAccessKeyId(): Unit =
+    if (runAwsCredentialsTest) {
+      val inConfig: ConfigSource = defaultInConfig
+        .set("auth_method", "basic")
+        .set("access_key", EMBULK_DYNAMODB_TEST_ACCESS_KEY)
+        .set("secret_key", EMBULK_DYNAMODB_TEST_SECRET_KEY)
+        .set("secret_access_key", EMBULK_DYNAMODB_TEST_SECRET_KEY)
 
-    doTest(inConfig)
-  }
+      Assert.assertThrows(classOf[ConfigException], () => {
+        doTest(inConfig)
+      })
+    }
 
-  @Test(expected = classOf[ConfigException])
+  @Test
   def setAuthMethod_Basic_NotSet(): Unit = {
     val inConfig: ConfigSource = defaultInConfig
       .set("auth_method", "basic")
 
-    doTest(inConfig)
+    Assert.assertThrows(classOf[ConfigException], () => {
+      doTest(inConfig)
+    })
   }
 
   @Test
-  def setAuthMethod_Env(): Unit = {
-    Assume.assumeTrue(runAwsCredentialsTest)
+  def setAuthMethod_Env(): Unit = if (runAwsCredentialsTest) {
     // NOTE: Requires to set the env vars like 'AWS_ACCESS_KEY_ID' and so on when testing.
     val inConfig: ConfigSource = defaultInConfig
       .set("auth_method", "env")
@@ -145,8 +146,7 @@ class AwsCredentialsTest extends EmbulkTestBase {
   }
 
   @Test
-  def setAuthMethod_Profile(): Unit = {
-    Assume.assumeTrue(runAwsCredentialsTest)
+  def setAuthMethod_Profile(): Unit = if (runAwsCredentialsTest) {
     // NOTE: Requires to set credentials to '~/.aws' when testing.
     val inConfig: ConfigSource = defaultInConfig
       .set("auth_method", "profile")
@@ -155,18 +155,19 @@ class AwsCredentialsTest extends EmbulkTestBase {
     doTest(inConfig)
   }
 
-  @Test(expected = classOf[IllegalArgumentException])
+  @Test
   def setAuthMethod_Profile_NotExistProfileName(): Unit = {
     val inConfig: ConfigSource = defaultInConfig
       .set("auth_method", "profile")
       .set("profile_name", "DO_NOT_EXIST")
 
-    doTest(inConfig)
+    Assert.assertThrows(classOf[IllegalArgumentException], () => {
+      doTest(inConfig)
+    })
   }
 
   @Test
-  def setAuthMethod_assume_role(): Unit = {
-    Assume.assumeTrue(runAwsCredentialsTest)
+  def setAuthMethod_assume_role(): Unit = if (runAwsCredentialsTest) {
     val inConfig: ConfigSource = defaultInConfig
       .set("auth_method", "assume_role")
       .set("role_arn", EMBULK_DYNAMODB_TEST_ASSUME_ROLE_ROLE_ARN)
@@ -175,14 +176,16 @@ class AwsCredentialsTest extends EmbulkTestBase {
     doTest(inConfig)
   }
 
-  @Test(expected = classOf[AWSSecurityTokenServiceException])
-  def setAuthMethod_assume_role_NotExistRoleArn(): Unit = {
-    Assume.assumeTrue(runAwsCredentialsTest)
-    val inConfig: ConfigSource = defaultInConfig
-      .set("auth_method", "assume_role")
-      .set("role_arn", "DO_NOT_EXIST")
-      .set("role_session_name", "dummy")
+  @Test
+  def setAuthMethod_assume_role_NotExistRoleArn(): Unit =
+    if (runAwsCredentialsTest) {
+      val inConfig: ConfigSource = defaultInConfig
+        .set("auth_method", "assume_role")
+        .set("role_arn", "DO_NOT_EXIST")
+        .set("role_session_name", "dummy")
 
-    doTest(inConfig)
-  }
+      Assert.assertThrows(classOf[AWSSecurityTokenServiceException], () => {
+        doTest(inConfig)
+      })
+    }
 }
