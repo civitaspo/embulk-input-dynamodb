@@ -6,11 +6,15 @@ import com.amazonaws.services.dynamodbv2.{
   AmazonDynamoDB,
   AmazonDynamoDBClientBuilder
 }
+import org.embulk.config.{ConfigLoader, ConfigSource, TaskReport, TaskSource}
 import org.embulk.input.dynamodb.DynamodbInputPlugin
-import org.embulk.spi.InputPlugin
-import org.embulk.test.TestingEmbulk
-import org.junit.{After, Rule}
+import org.embulk.spi.Schema
+import org.embulk.EmbulkTestRuntime
+import org.embulk.spi.TestPageBuilderReader.MockPageOutput
+import org.embulk.spi.util.Pages
+import org.junit.Rule
 
+import scala.jdk.CollectionConverters._
 import scala.util.{Failure, Success, Try}
 import scala.util.chaining._
 
@@ -49,20 +53,7 @@ trait EmbulkTestBase {
   }
 
   @Rule
-  def embulk: TestingEmbulk =
-    TestingEmbulk
-      .builder()
-      .registerPlugin(
-        classOf[InputPlugin],
-        "dynamodb",
-        classOf[DynamodbInputPlugin]
-      )
-      .build()
-
-  @After
-  def destroyEmbulk(): Unit = {
-    embulk.destroy()
-  }
+  def runtime: EmbulkTestRuntime = new EmbulkTestRuntime()
 
   def getEnvironmentVariableOrShowErrorMessage(name: String): String = {
     try {
@@ -81,5 +72,28 @@ trait EmbulkTestBase {
           e
         )
     }
+  }
+
+  def runInput(inConfig: ConfigSource, test: Seq[Seq[AnyRef]] => Unit): Unit = {
+    runtime.getInstance(classOf[DynamodbInputPlugin]).tap { plugin =>
+      plugin.transaction(
+        inConfig,
+        (taskSource: TaskSource, schema: Schema, taskCount: Int) => {
+          val output: MockPageOutput = new MockPageOutput()
+          val reports: Seq[TaskReport] = 0.until(taskCount).map { taskIndex =>
+            plugin.run(taskSource, schema, taskIndex, output)
+          }
+          output.finish()
+
+          test(Pages.toObjects(schema, output.pages).asScala.toSeq.map(_.toSeq))
+
+          reports.asJava
+        }
+      )
+    }
+  }
+
+  def loadConfigSourceFromYamlString(yaml: String): ConfigSource = {
+    new ConfigLoader(runtime.getModelManager).fromYamlString(yaml)
   }
 }

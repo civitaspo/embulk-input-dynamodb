@@ -12,7 +12,6 @@ import com.amazonaws.services.dynamodbv2.model.{
 }
 import org.embulk.config.ConfigSource
 import org.embulk.input.dynamodb.testutil.EmbulkTestBase
-import org.embulk.spi.util.Pages
 import org.hamcrest.CoreMatchers._
 import org.hamcrest.MatcherAssert.assertThat
 import org.junit.Test
@@ -20,7 +19,7 @@ import org.msgpack.value.Value
 
 import scala.jdk.CollectionConverters._
 
-class DynamodbScanOperationTest extends EmbulkTestBase {
+class DynamodbScanOperationBackwardCompatibilityTest extends EmbulkTestBase {
 
   private def testBackwardCompatibility(embulkInConfig: ConfigSource): Unit = {
     cleanupTable("EMBULK_DYNAMODB_TEST_TABLE")
@@ -88,56 +87,51 @@ class DynamodbScanOperationTest extends EmbulkTestBase {
       )
     }
 
-    val path = embulk.createTempFile("csv")
-    val result = embulk
-      .inputBuilder()
-      .in(embulkInConfig)
-      .outputPath(path)
-      .preview()
+    runInput(
+      embulkInConfig, { result: Seq[Seq[AnyRef]] =>
+        val head = result.head
+        assertThat(head(0).toString, is("key-1"))
+        assertThat(head(1).asInstanceOf[Long], is(0L))
+        assertThat(head(2).asInstanceOf[Double], is(42.195))
+        assertThat(head(3).asInstanceOf[Boolean], is(true))
 
-    val pages = result.getPages
-    val head = Pages.toObjects(result.getSchema, pages.get(0)).get(0)
+        val arrayValue = head(4).asInstanceOf[Value].asArrayValue()
+        assertThat(arrayValue.size(), is(2))
+        assertThat(arrayValue.get(0).asStringValue().toString, is("list-value"))
+        assertThat(arrayValue.get(1).asIntegerValue().asLong(), is(123L))
 
-    assertThat(head(0).toString, is("key-1"))
-    assertThat(head(1).asInstanceOf[Long], is(0L))
-    assertThat(head(2).asInstanceOf[Double], is(42.195))
-    assertThat(head(3).asInstanceOf[Boolean], is(true))
-
-    val arrayValue = head(4).asInstanceOf[Value].asArrayValue()
-    assertThat(arrayValue.size(), is(2))
-    assertThat(arrayValue.get(0).asStringValue().toString, is("list-value"))
-    assertThat(arrayValue.get(1).asIntegerValue().asLong(), is(123L))
-
-    val mapValue = head(5).asInstanceOf[Value].asMapValue()
-    assert(mapValue.keySet().asScala.map(_.toString).contains("map-key-1"))
-    assertThat(
-      mapValue
-        .entrySet()
-        .asScala
-        .filter(_.getKey.toString.equals("map-key-1"))
-        .head
-        .getValue
-        .toString,
-      is("map-value-1")
-    )
-    assert(mapValue.keySet().asScala.map(_.toString).contains("map-key-2"))
-    assertThat(
-      mapValue
-        .entrySet()
-        .asScala
-        .filter(_.getKey.toString.equals("map-key-2"))
-        .head
-        .getValue
-        .asIntegerValue()
-        .asLong(),
-      is(456L)
+        val mapValue = head(5).asInstanceOf[Value].asMapValue()
+        assert(mapValue.keySet().asScala.map(_.toString).contains("map-key-1"))
+        assertThat(
+          mapValue
+            .entrySet()
+            .asScala
+            .filter(_.getKey.toString.equals("map-key-1"))
+            .head
+            .getValue
+            .toString,
+          is("map-value-1")
+        )
+        assert(mapValue.keySet().asScala.map(_.toString).contains("map-key-2"))
+        assertThat(
+          mapValue
+            .entrySet()
+            .asScala
+            .filter(_.getKey.toString.equals("map-key-2"))
+            .head
+            .getValue
+            .asIntegerValue()
+            .asLong(),
+          is(456L)
+        )
+      }
     )
   }
 
   @Test
   def deprecatedScanOperationTest(): Unit = {
 
-    val inConfig: ConfigSource = embulk.configLoader().fromYamlString(s"""
+    val inConfig: ConfigSource = loadConfigSourceFromYamlString(s"""
         |type: dynamodb
         |end_point: http://${dynamoDBHost}:${dynamoDBPort}/
         |table: EMBULK_DYNAMODB_TEST_TABLE
@@ -159,7 +153,7 @@ class DynamodbScanOperationTest extends EmbulkTestBase {
 
   @Test
   def keepTheSameBehaviourAsDeprecatedScanOperationTest(): Unit = {
-    val inConfig: ConfigSource = embulk.configLoader().fromYamlString(s"""
+    val inConfig: ConfigSource = loadConfigSourceFromYamlString(s"""
         |type: dynamodb
         |endpoint: http://${dynamoDBHost}:${dynamoDBPort}/
         |table: EMBULK_DYNAMODB_TEST_TABLE

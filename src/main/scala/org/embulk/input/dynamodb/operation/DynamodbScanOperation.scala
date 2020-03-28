@@ -71,7 +71,7 @@ case class DynamodbScanOperation(task: DynamodbScanOperation.Task)
     loadableRecords match {
       case Some(v) if (result.getCount > v) =>
         f(result.getItems.asScala.take(v.toInt).map(_.asScala.toMap).toSeq)
-      case None =>
+      case _ =>
         f(result.getItems.asScala.map(_.asScala.toMap).toSeq)
         Option(result.getLastEvaluatedKey).foreach { lastEvaluatedKey =>
           runInternal(
