@@ -4,7 +4,6 @@ import com.amazonaws.services.dynamodbv2.model.{AttributeValue, QueryRequest}
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
 import org.embulk.config.{Config, ConfigDefault}
 import org.embulk.input.dynamodb.logger
-import scala.util.control.Breaks
 
 import scala.jdk.CollectionConverters._
 import scala.util.chaining._
