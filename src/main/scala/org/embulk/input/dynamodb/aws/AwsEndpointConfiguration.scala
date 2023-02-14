@@ -15,12 +15,6 @@ import scala.util.Try
 object AwsEndpointConfiguration {
 
   trait Task {
-
-    @deprecated(message = "Use #getEndpoint() instead.", since = "0.3.0")
-    @Config("end_point")
-    @ConfigDefault("null")
-    def getEndPoint: Optional[String]
-
     @Config("endpoint")
     @ConfigDefault("null")
     def getEndpoint: Optional[String]
@@ -31,26 +25,7 @@ object AwsEndpointConfiguration {
   }
 
   def apply(task: Task): AwsEndpointConfiguration = {
-    new AwsEndpointConfiguration(AwsEndpointConfigurationTaskCompat(task))
-  }
-}
-
-case class AwsEndpointConfigurationTaskCompat(@delegate task: Task)
-    extends Task {
-  override def getEndPoint: Optional[String] = throw new NotImplementedError()
-
-  override def getEndpoint: Optional[String] = {
-    if (task.getEndpoint.isPresent && task.getEndPoint.isPresent)
-      throw new ConfigException(
-        "You cannot use both \"endpoint\" option and \"end_point\" option. Use \"endpoint\" option."
-      )
-    if (task.getEndPoint.isPresent) {
-      logger.warn(
-        "[Deprecated] \"end_point\" option is deprecated. Use \"endpoint\" option instead."
-      )
-      return task.getEndPoint
-    }
-    task.getEndpoint
+    new AwsEndpointConfiguration(task)
   }
 }
 

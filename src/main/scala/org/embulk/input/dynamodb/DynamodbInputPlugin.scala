@@ -15,9 +15,6 @@ class DynamodbInputPlugin extends InputPlugin {
       control: InputPlugin.Control
   ): ConfigDiff = {
     val task: PluginTask = PluginTask.load(config)
-    if (isDeprecatedOperationRequired(task))
-      return DeprecatedDynamodbInputPlugin.transaction(config, control)
-
     val schema: Schema = DynamodbItemSchema(task).getEmbulkSchema
     val taskCount: Int = DynamodbOperationProxy(task).getEmbulkTaskCount
 
@@ -31,14 +28,6 @@ class DynamodbInputPlugin extends InputPlugin {
       taskCount: Int,
       control: InputPlugin.Control
   ): ConfigDiff = {
-    val task: PluginTask = PluginTask.load(taskSource)
-    if (isDeprecatedOperationRequired(task))
-      return DeprecatedDynamodbInputPlugin.resume(
-        taskSource,
-        schema,
-        taskCount,
-        control
-      )
     throw new UnsupportedOperationException
   }
 
@@ -49,14 +38,6 @@ class DynamodbInputPlugin extends InputPlugin {
       output: PageOutput
   ): TaskReport = {
     val task: PluginTask = PluginTask.load(taskSource)
-    if (isDeprecatedOperationRequired(task))
-      return DeprecatedDynamodbInputPlugin.run(
-        taskSource,
-        schema,
-        taskIndex,
-        output
-      )
-
     val pageBuilder = new PageBuilder(task.getBufferAllocator, schema, output)
 
     Aws(task).withDynamodb { dynamodb =>
@@ -76,23 +57,9 @@ class DynamodbInputPlugin extends InputPlugin {
       taskCount: Int,
       successTaskReports: JList[TaskReport]
   ): Unit = {
-    val task: PluginTask = PluginTask.load(taskSource)
-    if (isDeprecatedOperationRequired(task))
-      DeprecatedDynamodbInputPlugin.cleanup(
-        taskSource,
-        schema,
-        taskCount,
-        successTaskReports
-      )
   }
 
   override def guess(config: ConfigSource): ConfigDiff = {
-    val task: PluginTask = PluginTask.load(config)
-    if (isDeprecatedOperationRequired(task))
-      return DeprecatedDynamodbInputPlugin.guess(config)
     throw new UnsupportedOperationException
   }
-
-  private def isDeprecatedOperationRequired(task: PluginTask): Boolean =
-    task.getOperation.isPresent
 }

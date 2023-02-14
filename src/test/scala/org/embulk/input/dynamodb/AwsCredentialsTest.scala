@@ -56,33 +56,11 @@ class AwsCredentialsTest extends EmbulkTestBase {
           |""".stripMargin)
   }
 
-  @deprecated(since = "0.3.0")
-  @Test
-  def notSetAuthMethod_SetCredentials_deprecated(): Unit =
-    if (runAwsCredentialsTest) {
-      val inConfig: ConfigSource = defaultInConfig
-        .set("access_key", EMBULK_DYNAMODB_TEST_ACCESS_KEY)
-        .set("secret_key", EMBULK_DYNAMODB_TEST_SECRET_KEY)
-
-      doTest(inConfig)
-    }
-
   @Test
   def notSetAuthMethod_SetCredentials(): Unit = if (runAwsCredentialsTest) {
     val inConfig: ConfigSource = defaultInConfig
       .set("access_key_id", EMBULK_DYNAMODB_TEST_ACCESS_KEY)
       .set("secret_access_key", EMBULK_DYNAMODB_TEST_SECRET_KEY)
-
-    doTest(inConfig)
-  }
-
-  @deprecated(since = "0.3.0")
-  @Test
-  def setAuthMethod_Basic_deprecated(): Unit = if (runAwsCredentialsTest) {
-    val inConfig: ConfigSource = defaultInConfig
-      .set("auth_method", "basic")
-      .set("access_key", EMBULK_DYNAMODB_TEST_ACCESS_KEY)
-      .set("secret_key", EMBULK_DYNAMODB_TEST_SECRET_KEY)
 
     doTest(inConfig)
   }
@@ -96,35 +74,6 @@ class AwsCredentialsTest extends EmbulkTestBase {
 
     doTest(inConfig)
   }
-
-  @deprecated(since = "0.3.0")
-  @Test
-  def throwIfSetAccessKeyAndAccessKeyId(): Unit = if (runAwsCredentialsTest) {
-    val inConfig: ConfigSource = defaultInConfig
-      .set("auth_method", "basic")
-      .set("access_key", EMBULK_DYNAMODB_TEST_ACCESS_KEY)
-      .set("access_key_id", EMBULK_DYNAMODB_TEST_ACCESS_KEY)
-      .set("secret_key", EMBULK_DYNAMODB_TEST_SECRET_KEY)
-
-    Assert.assertThrows(classOf[ConfigException], () => {
-      doTest(inConfig)
-    })
-  }
-
-  @deprecated(since = "0.3.0")
-  @Test
-  def throwIfSetSecretKeyAndSecretAccessKeyId(): Unit =
-    if (runAwsCredentialsTest) {
-      val inConfig: ConfigSource = defaultInConfig
-        .set("auth_method", "basic")
-        .set("access_key", EMBULK_DYNAMODB_TEST_ACCESS_KEY)
-        .set("secret_key", EMBULK_DYNAMODB_TEST_SECRET_KEY)
-        .set("secret_access_key", EMBULK_DYNAMODB_TEST_SECRET_KEY)
-
-      Assert.assertThrows(classOf[ConfigException], () => {
-        doTest(inConfig)
-      })
-    }
 
   @Test
   def setAuthMethod_Basic_NotSet(): Unit = {

@@ -63,29 +63,44 @@ object DynamodbItemSchema {
 
     @Config("columns")
     @ConfigDefault("[]")
-    def getColumns: SchemaConfigCompat
+    def getColumns: Jlist[ColumnTask]
+
+    @Config("default_timezone")
+    @ConfigDefault("\"UTC\"")
+    def getDefaultTimeZoneId: String
+
+    @Config("default_timestamp_format")
+    @ConfigDefault("\"%Y-%m-%d %H:%M:%S.%6N %z\"")
+    def getDefaultTimestampFormat: String
+
+    @Config("default_date")
+    @ConfigDefault("\"1970-01-01\"")
+    def getDefaultDate: String
   }
 
 }
 
 case class DynamodbItemSchema(task: DynamodbItemSchema.Task) {
 
-  // TODO: build in this class after removing SchemaConfigCompat.
   private lazy val embulkSchema: Schema =
-    if (!isItemAsJson) task.getColumns.toSchema
-    else
-      Schema
-        .builder()
-        .add(task.getJsonColumnName, Types.JSON)
-        .build()
+    Schema
+      .builder()
+      .tap { b =>
+        if (isItemAsJson) b.add(task.getJsonColumnName, Types.JSON)
+        else
+          task.getColumns.toSeq.foreach { t =>
+            b.add(t.getName, t.getType)
+          }
+      }
+      .build()
 
   private lazy val timestampParsers: Map[String, TimestampParser] =
-    task.getColumns.columnTasks.map { columnTask =>
+    task.getColumns.toSeq.map { columnTask =>
       columnTask.getName -> TimestampParser.of(task, columnTask)
     }.toMap
 
   private lazy val attributeTypes: Map[String, DynamodbAttributeValueType] =
-    task.getColumns.columnTasks
+    task.getColumns.toSeq
       .filter(_.getAttributeType.isPresent)
       .map { columnTask =>
         columnTask.getName -> DynamodbAttributeValueType(
@@ -121,7 +136,7 @@ case class DynamodbItemSchema(task: DynamodbItemSchema.Task) {
   def getEmbulkColumn(columnIndex: Int): Option[Column] =
     Try(getEmbulkSchema.getColumn(columnIndex)).toOption
 
-  def isItemAsJson: Boolean = task.getColumns.isEmpty
+  def isItemAsJson: Boolean = task.getColumns.toSeq.isEmpty
 
   def visitColumns(visitor: DynamodbItemColumnVisitor): Unit =
     getEmbulkSchema.visitColumns(visitor)
