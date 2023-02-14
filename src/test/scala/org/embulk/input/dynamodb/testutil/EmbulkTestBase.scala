@@ -75,22 +75,21 @@ trait EmbulkTestBase {
   }
 
   def runInput(inConfig: ConfigSource, test: Seq[Seq[AnyRef]] => Unit): Unit = {
-    runtime.getInstance(classOf[DynamodbInputPlugin]).tap { plugin =>
-      plugin.transaction(
-        inConfig,
-        (taskSource: TaskSource, schema: Schema, taskCount: Int) => {
-          val output: MockPageOutput = new MockPageOutput()
-          val reports: Seq[TaskReport] = 0.until(taskCount).map { taskIndex =>
-            plugin.run(taskSource, schema, taskIndex, output)
-          }
-          output.finish()
-
-          test(Pages.toObjects(schema, output.pages).asScala.toSeq.map(_.toSeq))
-
-          reports.asJava
+    val plugin = new DynamodbInputPlugin()
+    plugin.transaction(
+      inConfig,
+      (taskSource: TaskSource, schema: Schema, taskCount: Int) => {
+        val output: MockPageOutput = new MockPageOutput()
+        val reports: Seq[TaskReport] = 0.until(taskCount).map { taskIndex =>
+          plugin.run(taskSource, schema, taskIndex, output)
         }
-      )
-    }
+        output.finish()
+
+        test(Pages.toObjects(schema, output.pages).asScala.toSeq.map(_.toSeq))
+
+        reports.asJava
+      }
+    )
   }
 
   def loadConfigSourceFromYamlString(yaml: String): ConfigSource = {

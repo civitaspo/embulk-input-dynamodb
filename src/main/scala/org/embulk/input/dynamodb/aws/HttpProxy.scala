@@ -3,12 +3,13 @@ package org.embulk.input.dynamodb.aws
 import java.util.Optional
 
 import com.amazonaws.{ClientConfiguration, Protocol}
-import org.embulk.config.{Config, ConfigDefault, ConfigException}
+import org.embulk.config.ConfigException
+import org.embulk.util.config.{Task => EmbulkTask, Config, ConfigDefault}
 import org.embulk.input.dynamodb.aws.HttpProxy.Task
 
 object HttpProxy {
 
-  trait Task {
+  trait Task extends EmbulkTask {
 
     @Config("host")
     @ConfigDefault("null")
@@ -50,8 +51,8 @@ class HttpProxy(task: Task) {
       case None =>
         throw new ConfigException(
           s"'${task.getProtocol}' is unsupported: `protocol` must be one of [${Protocol.values
-            .map(v => s"'$v'")
-            .mkString(", ")}]."
+              .map(v => s"'$v'")
+              .mkString(", ")}]."
         )
     }
 

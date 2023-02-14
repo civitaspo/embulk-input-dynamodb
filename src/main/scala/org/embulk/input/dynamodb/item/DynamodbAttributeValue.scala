@@ -5,15 +5,15 @@ import java.nio.charset.StandardCharsets
 import java.util.{Optional, List => JList, Map => JMap}
 
 import com.amazonaws.services.dynamodbv2.model.AttributeValue
-import org.embulk.config.{Config, ConfigDefault, Task => EmbulkTask}
+import org.embulk.util.config.{Config, ConfigDefault, Task => EmbulkTask}
 
 import scala.jdk.CollectionConverters._
 import scala.util.chaining._
 
-/**
-  * TODO: I want to bind directly `org.embulk.config.Config`` to `com.amazonaws.services.dynamodbv2.model.AttributeValue`.
-  * Should I implement `com.amazonaws.transform.JsonUnmarshallerContext`?
- **/
+/** TODO: I want to bind directly `org.embulk.util.config.Config`` to
+  * `com.amazonaws.services.dynamodbv2.model.AttributeValue`. Should I implement
+  * `com.amazonaws.transform.JsonUnmarshallerContext`?
+  */
 object DynamodbAttributeValue {
 
   trait Task extends EmbulkTask {

@@ -18,8 +18,8 @@ class DynamodbInputPlugin extends InputPlugin {
     val schema: Schema = DynamodbItemSchema(task).getEmbulkSchema
     val taskCount: Int = DynamodbOperationProxy(task).getEmbulkTaskCount
 
-    control.run(task.dump(), schema, taskCount)
-    Exec.newConfigDiff()
+    control.run(task.toTaskSource(), schema, taskCount)
+    PluginTask.newConfigDiff()
   }
 
   override def resume(
@@ -38,7 +38,7 @@ class DynamodbInputPlugin extends InputPlugin {
       output: PageOutput
   ): TaskReport = {
     val task: PluginTask = PluginTask.load(taskSource)
-    val pageBuilder = new PageBuilder(task.getBufferAllocator, schema, output)
+    val pageBuilder = new PageBuilder(Exec.getBufferAllocator(), schema, output)
 
     Aws(task).withDynamodb { dynamodb =>
       DynamodbOperationProxy(task).run(
@@ -48,7 +48,7 @@ class DynamodbInputPlugin extends InputPlugin {
       )
     }
     pageBuilder.finish()
-    Exec.newTaskReport()
+    PluginTask.newTaskReport()
   }
 
   override def cleanup(
@@ -56,8 +56,7 @@ class DynamodbInputPlugin extends InputPlugin {
       schema: Schema,
       taskCount: Int,
       successTaskReports: JList[TaskReport]
-  ): Unit = {
-  }
+  ): Unit = {}
 
   override def guess(config: ConfigSource): ConfigDiff = {
     throw new UnsupportedOperationException

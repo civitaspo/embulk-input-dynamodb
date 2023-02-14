@@ -105,9 +105,12 @@ class DynamodbOperationTest extends EmbulkTestBase {
            |scan:
            |  limit: 1
            |""".stripMargin)
-    runInput(inScanConfig, { result =>
-      assert(result.size.equals(1))
-    })
+    runInput(
+      inScanConfig,
+      { result =>
+        assert(result.size.equals(1))
+      }
+    )
 
     val inQueryConfig: ConfigSource = loadConfigSourceFromYamlString(s"""
              |type: dynamodb
@@ -124,8 +127,11 @@ class DynamodbOperationTest extends EmbulkTestBase {
              |    ":v": {S: a}
              |  limit: 1
              |""".stripMargin)
-    runInput(inQueryConfig, { result =>
-      assert(result.size.equals(1))
-    })
+    runInput(
+      inQueryConfig,
+      { result =>
+        assert(result.size.equals(1))
+      }
+    )
   }
 }

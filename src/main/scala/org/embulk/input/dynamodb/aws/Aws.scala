@@ -5,11 +5,13 @@ import com.amazonaws.services.dynamodbv2.{
   AmazonDynamoDB,
   AmazonDynamoDBClientBuilder
 }
+import org.embulk.util.config.{Task => EmbulkTask}
 
 object Aws {
 
   trait Task
-      extends AwsCredentials.Task
+      extends EmbulkTask
+      with AwsCredentials.Task
       with AwsEndpointConfiguration.Task
       with AwsClientConfiguration.Task
       with AwsDynamodbConfiguration.Task

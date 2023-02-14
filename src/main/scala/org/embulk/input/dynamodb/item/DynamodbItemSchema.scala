@@ -4,10 +4,10 @@ import java.util.{Optional, List => JList}
 
 import com.amazonaws.services.dynamodbv2.model.AttributeValue
 import com.fasterxml.jackson.annotation.{JsonCreator, JsonValue}
-import org.embulk.config.{Config, ConfigDefault, Task => EmbulkTask}
+import org.embulk.util.config.{Config, ConfigDefault, Task => EmbulkTask}
 import org.embulk.spi.{Column, PageBuilder, Schema}
 import org.embulk.spi.`type`.{Type, Types}
-import org.embulk.spi.time.TimestampParser
+import org.embulk.util.timestamp.TimestampFormatter
 
 import scala.jdk.CollectionConverters._
 import scala.util.chaining._
@@ -15,9 +15,7 @@ import scala.util.Try
 
 object DynamodbItemSchema {
 
-  trait ColumnTask
-      extends EmbulkTask
-      with TimestampParser.TimestampColumnOption {
+  trait ColumnTask extends EmbulkTask {
 
     @Config("name")
     def getName: String
@@ -28,34 +26,21 @@ object DynamodbItemSchema {
     @Config("attribute_type")
     @ConfigDefault("null")
     def getAttributeType: Optional[String]
+
+    @Config("timezone")
+    @ConfigDefault("null")
+    def getTimeZoneId: Optional[String]
+
+    @Config("format")
+    @ConfigDefault("null")
+    def getFormat: Optional[String]
+
+    @Config("date")
+    @ConfigDefault("null")
+    def getDate: Optional[String]
   }
 
-  @deprecated(
-    message = "for DeprecatedDynamodbInputPlugin",
-    since = "0.3.0"
-  )
-  case class SchemaConfigCompat(columnTasks: Seq[ColumnTask]) {
-    @JsonCreator
-    def this(columnTasks: JList[ColumnTask]) =
-      this(columnTasks.asScala.toSeq)
-
-    @JsonValue
-    def getColumnTasks: JList[ColumnTask] = columnTasks.asJava
-
-    def toSchema: Schema =
-      Schema
-        .builder()
-        .tap { b =>
-          columnTasks.foreach { t =>
-            b.add(t.getName, t.getType)
-          }
-        }
-        .build()
-
-    def isEmpty: Boolean = columnTasks.isEmpty
-  }
-
-  trait Task extends EmbulkTask with TimestampParser.Task {
+  trait Task extends EmbulkTask {
 
     @Config("json_column_name")
     @ConfigDefault("\"record\"")
@@ -63,7 +48,7 @@ object DynamodbItemSchema {
 
     @Config("columns")
     @ConfigDefault("[]")
-    def getColumns: Jlist[ColumnTask]
+    def getColumns: JList[ColumnTask]
 
     @Config("default_timezone")
     @ConfigDefault("\"UTC\"")
@@ -88,19 +73,30 @@ case class DynamodbItemSchema(task: DynamodbItemSchema.Task) {
       .tap { b =>
         if (isItemAsJson) b.add(task.getJsonColumnName, Types.JSON)
         else
-          task.getColumns.toSeq.foreach { t =>
+          task.getColumns.asScala.foreach { t =>
             b.add(t.getName, t.getType)
           }
       }
       .build()
 
-  private lazy val timestampParsers: Map[String, TimestampParser] =
-    task.getColumns.toSeq.map { columnTask =>
-      columnTask.getName -> TimestampParser.of(task, columnTask)
+  private lazy val timestampFormatters: Map[String, TimestampFormatter] =
+    task.getColumns.asScala.map { columnTask =>
+      columnTask.getName -> TimestampFormatter
+        .builder(
+          columnTask.getFormat.orElse(task.getDefaultTimestampFormat),
+          true
+        )
+        .setDefaultZoneFromString(
+          columnTask.getTimeZoneId.orElse(task.getDefaultTimeZoneId)
+        )
+        .setDefaultDateFromString(
+          columnTask.getDate.orElse(task.getDefaultDate)
+        )
+        .build()
     }.toMap
 
   private lazy val attributeTypes: Map[String, DynamodbAttributeValueType] =
-    task.getColumns.toSeq
+    task.getColumns.asScala
       .filter(_.getAttributeType.isPresent)
       .map { columnTask =>
         columnTask.getName -> DynamodbAttributeValueType(
@@ -116,11 +112,11 @@ case class DynamodbItemSchema(task: DynamodbItemSchema.Task) {
 
   def getEmbulkSchema: Schema = embulkSchema
 
-  def getTimestampParser(column: Column): Option[TimestampParser] =
-    timestampParsers.get(column.getName)
+  def getTimestampFormatter(column: Column): Option[TimestampFormatter] =
+    timestampFormatters.get(column.getName)
 
-  def getTimestampParser(columnName: String): Option[TimestampParser] =
-    getEmbulkColumn(columnName).flatMap(getTimestampParser)
+  def getTimestampFormatter(columnName: String): Option[TimestampFormatter] =
+    getEmbulkColumn(columnName).flatMap(getTimestampFormatter)
 
   def getAttributeType(column: Column): Option[DynamodbAttributeValueType] =
     attributeTypes.get(column.getName)
@@ -136,7 +132,7 @@ case class DynamodbItemSchema(task: DynamodbItemSchema.Task) {
   def getEmbulkColumn(columnIndex: Int): Option[Column] =
     Try(getEmbulkSchema.getColumn(columnIndex)).toOption
 
-  def isItemAsJson: Boolean = task.getColumns.toSeq.isEmpty
+  def isItemAsJson: Boolean = task.getColumns.asScala.isEmpty
 
   def visitColumns(visitor: DynamodbItemColumnVisitor): Unit =
     getEmbulkSchema.visitColumns(visitor)

@@ -2,7 +2,7 @@ package org.embulk.input.dynamodb.operation
 
 import com.amazonaws.services.dynamodbv2.model.{AttributeValue, QueryRequest}
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
-import org.embulk.config.{Config, ConfigDefault}
+import org.embulk.util.config.{Config, ConfigDefault}
 import org.embulk.input.dynamodb.logger
 
 import scala.jdk.CollectionConverters._

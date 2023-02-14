@@ -4,11 +4,13 @@ import java.nio.ByteBuffer
 import java.nio.charset.StandardCharsets
 
 import org.embulk.input.dynamodb.logger
-import org.embulk.spi.time.{Timestamp, TimestampParser}
+import org.embulk.spi.time.Timestamp
+import org.embulk.util.timestamp.TimestampFormatter
 import org.msgpack.value.{Value, ValueFactory}
 
 import scala.jdk.CollectionConverters._
 import scala.util.chaining._
+import java.time.Instant
 
 object DynamodbAttributeValueEmbulkTypeTransformable {
 
@@ -50,7 +52,7 @@ object DynamodbAttributeValueEmbulkTypeTransformable {
 case class DynamodbAttributeValueEmbulkTypeTransformable(
     attributeValue: DynamodbAttributeValue,
     typeEnforcer: Option[DynamodbAttributeValueType] = None,
-    timestampParser: Option[TimestampParser] = None
+    timestampFormatter: Option[TimestampFormatter] = None
 ) {
 
   private def fromAttributeValueType: DynamodbAttributeValueType =
@@ -142,10 +144,14 @@ case class DynamodbAttributeValueEmbulkTypeTransformable(
 
     Option(fromAttributeValueType match {
       case DynamodbAttributeValueType.S =>
-        if (DynamodbAttributeValueEmbulkTypeTransformable.TRUTHY_STRINGS
-              .contains(attributeValue.getS)) true
-        else if (DynamodbAttributeValueEmbulkTypeTransformable.FALSY_STRINGS
-                   .contains(attributeValue.getS)) false
+        if (
+          DynamodbAttributeValueEmbulkTypeTransformable.TRUTHY_STRINGS
+            .contains(attributeValue.getS)
+        ) true
+        else if (
+          DynamodbAttributeValueEmbulkTypeTransformable.FALSY_STRINGS
+            .contains(attributeValue.getS)
+        ) false
         else return None
       case DynamodbAttributeValueType.N =>
         convertNAsLongOrDouble(attributeValue.getN) match {
@@ -154,11 +160,15 @@ case class DynamodbAttributeValueEmbulkTypeTransformable(
         }
       case DynamodbAttributeValueType.B =>
         val s = convertBAsString(attributeValue.getB)
-        if (DynamodbAttributeValueEmbulkTypeTransformable.TRUTHY_STRINGS
-              .contains(s))
+        if (
+          DynamodbAttributeValueEmbulkTypeTransformable.TRUTHY_STRINGS
+            .contains(s)
+        )
           true
-        else if (DynamodbAttributeValueEmbulkTypeTransformable.FALSY_STRINGS
-                   .contains(s)) false
+        else if (
+          DynamodbAttributeValueEmbulkTypeTransformable.FALSY_STRINGS
+            .contains(s)
+        ) false
         else return None
       case DynamodbAttributeValueType.BOOL => attributeValue.getBOOL
       case unsupported =>
@@ -221,9 +231,9 @@ case class DynamodbAttributeValueEmbulkTypeTransformable(
     if (attributeValue.isNull) return None
 
     Option(fromAttributeValueType match {
-      case DynamodbAttributeValueType.S    => attributeValue.getS
-      case DynamodbAttributeValueType.N    => attributeValue.getN
-      case DynamodbAttributeValueType.B    => convertBAsString(attributeValue.getB)
+      case DynamodbAttributeValueType.S => attributeValue.getS
+      case DynamodbAttributeValueType.N => attributeValue.getN
+      case DynamodbAttributeValueType.B => convertBAsString(attributeValue.getB)
       case DynamodbAttributeValueType.SS   => asMessagePack.map(_.toJson).get
       case DynamodbAttributeValueType.NS   => asMessagePack.map(_.toJson).get
       case DynamodbAttributeValueType.BS   => asMessagePack.map(_.toJson).get
@@ -238,8 +248,8 @@ case class DynamodbAttributeValueEmbulkTypeTransformable(
     })
   }
 
-  def asTimestamp: Option[Timestamp] = {
-    timestampParser.flatMap(p => asString.map(p.parse))
+  def asTimestamp: Option[Instant] = {
+    timestampFormatter.flatMap(p => asString.map(p.parse))
   }
 
 }

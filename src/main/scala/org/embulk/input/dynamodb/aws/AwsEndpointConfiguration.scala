@@ -5,16 +5,16 @@ import java.util.Optional
 import com.amazonaws.client.builder.AwsClientBuilder
 import com.amazonaws.client.builder.AwsClientBuilder.EndpointConfiguration
 import com.amazonaws.regions.{DefaultAwsRegionProviderChain, Regions}
-import org.embulk.config.{Config, ConfigDefault, ConfigException}
+import org.embulk.config.ConfigException
+import org.embulk.util.config.{Task => EmbulkTask, Config, ConfigDefault}
 import org.embulk.input.dynamodb.aws.AwsEndpointConfiguration.Task
 import org.embulk.input.dynamodb.logger
-import zio.macros.annotation.delegate
 
 import scala.util.Try
 
 object AwsEndpointConfiguration {
 
-  trait Task {
+  trait Task extends EmbulkTask {
     @Config("endpoint")
     @ConfigDefault("null")
     def getEndpoint: Optional[String]

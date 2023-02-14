@@ -19,15 +19,15 @@ import com.amazonaws.auth.profile.{
   ProfileCredentialsProvider,
   ProfilesConfigFile
 }
-import org.embulk.config.{Config, ConfigDefault, ConfigException}
+import org.embulk.config.ConfigException
+import org.embulk.util.config.{Config, ConfigDefault, Task => EmbulkTask}
 import org.embulk.input.dynamodb.aws.AwsCredentials.Task
 import org.embulk.input.dynamodb.logger
-import org.embulk.spi.unit.LocalFile
-import zio.macros.annotation.delegate
+import org.embulk.util.config.units.LocalFile
 
 object AwsCredentials {
 
-  trait Task {
+  trait Task extends EmbulkTask {
 
     @Config("auth_method")
     @ConfigDefault("\"default\"")

@@ -174,9 +174,11 @@ You can see more examples [here](./example).
 
 ```shell
 $ ./run_dynamodb_local.sh
+# Set dummy credentials (access_key_id=dummy and secret_access_key=dummy)
+$ aws configure
 $ ./example/prepare_dynamodb_table.sh
-$ ./gradlew classpath
-$ embulk run example/config-query.yml -Ilib
+$ ./gradlew gem
+$ embulk run example/config-query.yml -Ibuild/gemContents/lib
 ```
 
 ### Run tests
@@ -230,4 +232,4 @@ $ ./gradlew gemPush
 
 ## License
 
-[MIT LICENSE](./LICENSE)
+[MIT LICENSE](./LICENSE.txt)

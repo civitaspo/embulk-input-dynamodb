@@ -88,7 +88,8 @@ class DynamodbScanOperationBackwardCompatibilityTest extends EmbulkTestBase {
     }
 
     runInput(
-      embulkInConfig, { result: Seq[Seq[AnyRef]] =>
+      embulkInConfig,
+      { result: Seq[Seq[AnyRef]] =>
         val head = result.head
         assertThat(head(0).toString, is("key-1"))
         assertThat(head(1).asInstanceOf[Long], is(0L))

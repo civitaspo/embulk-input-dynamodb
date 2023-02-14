@@ -3,12 +3,12 @@ package org.embulk.input.dynamodb.aws
 import java.util.Optional
 
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder
-import org.embulk.config.{Config, ConfigDefault}
+import org.embulk.util.config.{Config, ConfigDefault, Task => EmbulkTask}
 import org.embulk.input.dynamodb.aws.AwsDynamodbConfiguration.Task
 
 object AwsDynamodbConfiguration {
 
-  trait Task {
+  trait Task extends EmbulkTask {
 
     @Config("enable_endpoint_discovery")
     @ConfigDefault("null")

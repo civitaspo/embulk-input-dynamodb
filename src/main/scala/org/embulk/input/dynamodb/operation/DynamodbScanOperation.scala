@@ -4,7 +4,8 @@ import java.util.Optional
 
 import com.amazonaws.services.dynamodbv2.model.{AttributeValue, ScanRequest}
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
-import org.embulk.config.{Config, ConfigDefault, ConfigException}
+import org.embulk.config.ConfigException
+import org.embulk.util.config.{Config, ConfigDefault}
 import org.embulk.input.dynamodb.logger
 
 import scala.jdk.CollectionConverters._
