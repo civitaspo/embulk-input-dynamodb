@@ -4,11 +4,12 @@ import java.util.Optional
 
 import com.amazonaws.services.dynamodbv2.model.AttributeValue
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
-import org.embulk.config.{
-  Config,
-  ConfigDefault,
-  ConfigException,
-  Task => EmbulkTask
+import org.embulk.config.ConfigException
+import org.embulk.util.config.{Config, ConfigDefault, Task => EmbulkTask}
+import org.embulk.input.dynamodb.operation.{
+  DynamodbQueryOperation,
+  DynamodbScanOperation,
+  EmbulkDynamodbOperation
 }
 
 object DynamodbOperationProxy {

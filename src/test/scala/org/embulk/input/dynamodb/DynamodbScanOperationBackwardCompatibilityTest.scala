@@ -88,7 +88,8 @@ class DynamodbScanOperationBackwardCompatibilityTest extends EmbulkTestBase {
     }
 
     runInput(
-      embulkInConfig, { result: Seq[Seq[AnyRef]] =>
+      embulkInConfig,
+      { result: Seq[Seq[AnyRef]] =>
         val head = result.head
         assertThat(head(0).toString, is("key-1"))
         assertThat(head(1).asInstanceOf[Long], is(0L))
@@ -128,48 +129,4 @@ class DynamodbScanOperationBackwardCompatibilityTest extends EmbulkTestBase {
     )
   }
 
-  @Test
-  def deprecatedScanOperationTest(): Unit = {
-
-    val inConfig: ConfigSource = loadConfigSourceFromYamlString(s"""
-        |type: dynamodb
-        |end_point: http://${dynamoDBHost}:${dynamoDBPort}/
-        |table: EMBULK_DYNAMODB_TEST_TABLE
-        |auth_method: basic
-        |access_key: dummy
-        |secret_key: dummy
-        |operation: scan
-        |columns:
-        |  - {name: pri-key,     type: string}
-        |  - {name: sort-key,    type: long}
-        |  - {name: doubleValue, type: double}
-        |  - {name: boolValue,   type: boolean}
-        |  - {name: listValue,   type: json}
-        |  - {name: mapValue,    type: json}
-        |""".stripMargin)
-
-    testBackwardCompatibility(inConfig)
-  }
-
-  @Test
-  def keepTheSameBehaviourAsDeprecatedScanOperationTest(): Unit = {
-    val inConfig: ConfigSource = loadConfigSourceFromYamlString(s"""
-        |type: dynamodb
-        |endpoint: http://${dynamoDBHost}:${dynamoDBPort}/
-        |table: EMBULK_DYNAMODB_TEST_TABLE
-        |auth_method: basic
-        |access_key: dummy
-        |secret_key: dummy
-        |scan: {}
-        |columns:
-        |  - {name: pri-key,     type: string}
-        |  - {name: sort-key,    type: long}
-        |  - {name: doubleValue, type: double}
-        |  - {name: boolValue,   type: boolean}
-        |  - {name: listValue,   type: json}
-        |  - {name: mapValue,    type: json}
-        |""".stripMargin)
-
-    testBackwardCompatibility(inConfig)
-  }
 }

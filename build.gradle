@@ -1,110 +1,84 @@
 plugins {
-    id "com.jfrog.bintray" version "1.1"
-    id "com.github.jruby-gradle.base" version "1.5.0"
     id "scala"
-    id "com.diffplug.gradle.spotless" version "3.27.1"
+    id "maven-publish"
+    id "org.embulk.embulk-plugins" version "0.5.5"
+    // note: Incompatible because this component declares an API of a component compatible with Java 11 and the consumer needed a runtime of a component compatible with Java 8
+    // id "com.diffplug.spotless" version "6.15.0"
+    // https://github.com/diffplug/spotless/blob/main/plugin-gradle/CHANGES.md#6130---2023-01-14
+    id "com.diffplug.spotless" version "6.13.0"
+    // note: We cannot use the latest version because of the following error.
+    // > org/eclipse/jgit/lib/Repository has been compiled by a more recent version of the Java Runtime (class file version 55.0), this version of the Java Runtime only recognizes class file versions up to 52.0
+    // id "com.palantir.git-version" version "0.15.0"
+    id "com.palantir.git-version" version "0.12.3"
 }
-
-import com.github.jrubygradle.JRubyExec
 repositories {
     mavenCentral()
-    jcenter()
 }
-configurations {
-    provided
-}
-
-version = "0.3.1"
+group = "pro.civitaspo"
+description = "Loads records from Dynamodb."
+version = {
+    def vd = versionDetails()
+    if (vd.commitDistance == 0 && vd.lastTag ==~ /^[0-9]+\.[0-9]+\.[0-9]+(\.[a-zA-Z0-9]+)?/) {
+        vd.lastTag
+    } else {
+        "0.0.0.${vd.gitHash}"
+    }
+}()
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
 dependencies {
-    compile "org.scala-lang:scala-library:2.13.1"
+    // note: The upper versions of embulk includes Guava Dependency removal,
+    //       so we need to specify the version of embulk to avoid some errors.
+    //       We may need to update the version of embulk in the future.
+    def embulkVersion = "0.10.41"
+    compileOnly "org.embulk:embulk-api:${embulkVersion}"
+    compileOnly "org.embulk:embulk-spi:${embulkVersion}"
+    implementation "org.scala-lang:scala-library:2.13.1"
 
-    compile  "org.embulk:embulk-core:0.9.23"
-    provided "org.embulk:embulk-core:0.9.23"
+    implementation "org.embulk:embulk-util-config:0.3.2"
+    implementation "org.embulk:embulk-util-json:0.1.1"
+    implementation "org.embulk:embulk-util-timestamp:0.2.1"
+    implementation "com.amazonaws:aws-java-sdk-dynamodb:1.11.711"
+    implementation "com.amazonaws:aws-java-sdk-sts:1.11.711"
 
-    compile "com.amazonaws:aws-java-sdk-dynamodb:1.11.711"
-    compile "com.amazonaws:aws-java-sdk-sts:1.11.711"
-    // For @delegate macro.
-    compile "dev.zio:zio-macros-core_2.13:0.6.2"
-
-    testCompile "junit:junit:4.+"
-    testCompile "org.embulk:embulk-core:0.9.23:tests"
-    testCompile "org.embulk:embulk-standards:0.9.23"
-    testCompile "org.embulk:embulk-deps-buffer:0.9.23"
-    testCompile "org.embulk:embulk-deps-config:0.9.23"
+    testImplementation "junit:junit:4.+"
+    testImplementation "org.embulk:embulk-junit4:${embulkVersion}"
+    testImplementation "org.embulk:embulk-deps:${embulkVersion}"
+    testImplementation "org.embulk:embulk-input-config:0.10.36"
 }
-
-compileScala {
-    scalaCompileOptions.additionalParameters = [
-        "-Ymacro-annotations"
-    ]
-}
-
 test {
     jvmArgs '-Xms4g', '-Xmx4g', '-XX:MaxMetaspaceSize=1g'
     maxHeapSize = "4g"
 }
-
 spotless {
     scala {
-        scalafmt('2.3.2').configFile('.scalafmt.conf')
+        scalafmt('3.7.1').configFile('.scalafmt.conf')
     }
 }
-
-task classpath(type: Copy, dependsOn: ["jar"]) {
-    doFirst { file("classpath").deleteDir() }
-    from (configurations.runtime - configurations.provided + files(jar.archivePath))
-    into "classpath"
+embulkPlugin {
+    mainClass = "org.embulk.input.dynamodb.DynamodbInputPlugin"
+    category = "input"
+    type = "dynamodb"
 }
-clean { delete "classpath" }
-
-task gem(type: JRubyExec, dependsOn: ["gemspec", "classpath"]) {
-    jrubyArgs "-S"
-    script "gem"
-    scriptArgs "build", "${project.name}.gemspec"
-    doLast { ant.move(file: "${project.name}-${project.version}.gem", todir: "pkg") }
-}
-
-task gemPush(type: JRubyExec, dependsOn: ["gem"]) {
-    jrubyArgs "-S"
-    script "gem"
-    scriptArgs "push", "pkg/${project.name}-${project.version}.gem"
-}
-
-task "package"(dependsOn: ["gemspec", "classpath"]) {
-    doLast {
-        println "> Build succeeded."
-        println "> You can run embulk with '-L ${file(".").absolutePath}' argument."
+publishing {
+    publications {
+        embulkPluginMaven(MavenPublication) {
+            from components.java
+        }
+    }
+    repositories {
+        maven {
+            url = "${project.buildDir}/mavenPublishLocal"
+        }
     }
 }
-
-task gemspec {
-    ext.gemspecFile = file("${project.name}.gemspec")
-    inputs.file "build.gradle"
-    outputs.file gemspecFile
-    doLast { gemspecFile.write($/
-Gem::Specification.new do |spec|
-  spec.name          = "${project.name}"
-  spec.version       = "${project.version}"
-  spec.authors       = ["Daisuke Higashi", "Civitaspo"]
-  spec.summary       = %[Dynamodb input plugin for Embulk]
-  spec.description   = %["Loads records from Dynamodb."]
-  spec.email         = ["daisuke.develop@gmail.com", "civitaspo@gmail.com"]
-  spec.licenses      = ["MIT"]
-  spec.homepage      = "https://github.com/lulichn/embulk-input-dynamodb"
-
-  spec.files         = `git ls-files`.split("\n") + Dir["classpath/*.jar"]
-  spec.test_files    = spec.files.grep(%r"^(test|spec)/")
-  spec.require_paths = ["lib"]
-
-  spec.add_development_dependency 'bundler', ['~> 1.0']
-  spec.add_development_dependency 'rake', ['~> 12.0']
-end
-/$)
-    }
+gem {
+    from("LICENSE.txt")
+    authors = ["Daisuke Higashi", "Civitaspo"]
+    email = ["daisuke.develop@gmail.com", "civitaspo@gmail.com"]
+    summary = "An Embulk plugin to ingest data from Dynamodb."
+    homepage = "https://github.com/lulichn/embulk-input-dynamodb"
+    licenses = [ "MIT" ]
 }
-clean { delete "${project.name}.gemspec" }
-

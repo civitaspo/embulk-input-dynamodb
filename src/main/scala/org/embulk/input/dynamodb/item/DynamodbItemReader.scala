@@ -3,6 +3,7 @@ package org.embulk.input.dynamodb.item
 import org.embulk.spi.Column
 import org.embulk.spi.time.Timestamp
 import org.msgpack.value.Value
+import java.time.Instant
 
 case class DynamodbItemReader(
     private val schema: DynamodbItemSchema,
@@ -28,7 +29,7 @@ case class DynamodbItemReader(
     DynamodbAttributeValueEmbulkTypeTransformable(
       value,
       typeEnforcer = schema.getAttributeType(name),
-      timestampParser = schema.getTimestampParser(name)
+      timestampFormatter = schema.getTimestampFormatter(name)
     )
   }
 
@@ -52,7 +53,7 @@ case class DynamodbItemReader(
       .get(column.getName)
       .flatMap(v => getTransformable(column.getName, v).asDouble)
 
-  def getTimestamp(column: Column): Option[Timestamp] =
+  def getTimestamp(column: Column): Option[Instant] =
     currentItem
       .get(column.getName)
       .flatMap(v => getTransformable(column.getName, v).asTimestamp)

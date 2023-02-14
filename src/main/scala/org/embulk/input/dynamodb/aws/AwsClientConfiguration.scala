@@ -4,12 +4,12 @@ import java.util.Optional
 
 import com.amazonaws.ClientConfiguration
 import com.amazonaws.client.builder.AwsClientBuilder
-import org.embulk.config.{Config, ConfigDefault}
+import org.embulk.util.config.{Config, ConfigDefault, Task => EmbulkTask}
 import org.embulk.input.dynamodb.aws.AwsClientConfiguration.Task
 
 object AwsClientConfiguration {
 
-  trait Task {
+  trait Task extends EmbulkTask {
 
     @Config("http_proxy")
     @ConfigDefault("null")
