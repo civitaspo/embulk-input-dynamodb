@@ -38,7 +38,8 @@ class DynamodbInputPlugin extends InputPlugin {
       output: PageOutput
   ): TaskReport = {
     val task: PluginTask = PluginTask.load(taskSource)
-    val pageBuilder = new PageBuilder(Exec.getBufferAllocator(), schema, output)
+    val pageBuilder =
+      Exec.getPageBuilder(Exec.getBufferAllocator(), schema, output)
 
     Aws(task).withDynamodb { dynamodb =>
       DynamodbOperationProxy(task).run(

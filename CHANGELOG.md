@@ -1,7 +1,15 @@
+1.0.1 (2023-02-15)
+==================
+
+- [chore] [#29](https://github.com/lulichn/embulk-input-dynamodb/pull/29) Upgrade dependencies.
+    - Use `Exec.getPageBuilder` instead of `new PageBuilder`.
+    - Upgrade scala 2.13.1 -> 2.13.10
+    - Upgrade aws-sdk 1.11.171 -> 1.12.406
+
 1.0.0 (2023-02-15)
 ==================
 
-- [Breaking Change][#27](https://github.com/lulichn/embulk-input-dynamodb/pull/27) Upgrade embulk 0.9.23 -> 0.10.41 with removing deprecated features.
+- [Breaking Change] [#27](https://github.com/lulichn/embulk-input-dynamodb/pull/27) Upgrade embulk 0.9.23 -> 0.10.41 with removing deprecated features.
     - Upgrade Gradle 6.1 -> 7.6
     - Apply gradle-embulk-plugins
     - Remove deprecated features
