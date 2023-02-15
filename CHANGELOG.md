@@ -1,3 +1,8 @@
+1.0.2 (2023-02-15)
+==================
+
+- [chore] [#30](https://github.com/lulichn/embulk-input-dynamodb/pull/30) Fix scan log message.
+
 1.0.1 (2023-02-15)
 ==================
 
