@@ -1,7 +1,12 @@
+1.0.1 (2023-02-15)
+==================
+
+- [chore] [#30](https://github.com/lulichn/embulk-input-dynamodb/pull/30) Upgrade dependencies.
+
 1.0.0 (2023-02-15)
 ==================
 
-- [Breaking Change][#27](https://github.com/lulichn/embulk-input-dynamodb/pull/27) Upgrade embulk 0.9.23 -> 0.10.41 with removing deprecated features.
+- [Breaking Change] [#27](https://github.com/lulichn/embulk-input-dynamodb/pull/27) Upgrade embulk 0.9.23 -> 0.10.41 with removing deprecated features.
     - Upgrade Gradle 6.1 -> 7.6
     - Apply gradle-embulk-plugins
     - Remove deprecated features
