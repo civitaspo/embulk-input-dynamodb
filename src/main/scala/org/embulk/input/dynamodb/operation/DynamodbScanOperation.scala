@@ -67,7 +67,7 @@ case class DynamodbScanOperation(task: DynamodbScanOperation.Task)
 
     val result =
       dynamodb.scan(newRequest(embulkTaskIndex, lastEvaluatedKey).tap { req =>
-        logger.info(s"Call DynamodbQueryRequest: ${req.toString}")
+        logger.info(s"Call DynamodbScanRequest: ${req.toString}")
       })
     loadableRecords match {
       case Some(v) if (result.getCount > v) =>
