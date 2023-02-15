@@ -1,7 +1,16 @@
+1.0.0 (2023-02-15)
+==================
+
+- [Breaking Change][#27](https://github.com/lulichn/embulk-input-dynamodb/pull/27) Upgrade embulk 0.9.23 -> 0.10.41 with removing deprecated features.
+    - Upgrade Gradle 6.1 -> 7.6
+    - Apply gradle-embulk-plugins
+    - Remove deprecated features
+    - Upgrade embulk 0.9.23 -> 0.10.41
+
 0.3.1 (2020-03-29)
 ==================
 
-- [BugFix] [#23](https://github.com/lulichn/embulk-input-dynamodb/pull/23) Throw scala.MatchError when using "limit" option. (Fix [#21](https://github.com/lulichn/embulk-input-dynamodb/issues/21)) 
+- [BugFix] [#23](https://github.com/lulichn/embulk-input-dynamodb/pull/23) Throw scala.MatchError when using "limit" option. (Fix [#21](https://github.com/lulichn/embulk-input-dynamodb/issues/21))
 - [Enhancement] [#23](https://github.com/lulichn/embulk-input-dynamodb/pull/23) Use embulk-core tests library instead of embulk-test.
 
 0.3.0 (2020-03-09)

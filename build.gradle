@@ -29,9 +29,6 @@ sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
 dependencies {
-    // note: The upper versions of embulk includes Guava Dependency removal,
-    //       so we need to specify the version of embulk to avoid some errors.
-    //       We may need to update the version of embulk in the future.
     def embulkVersion = "0.10.41"
     compileOnly "org.embulk:embulk-api:${embulkVersion}"
     compileOnly "org.embulk:embulk-spi:${embulkVersion}"
