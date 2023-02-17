@@ -10,6 +10,7 @@ import org.embulk.input.dynamodb.logger
 
 import scala.jdk.CollectionConverters._
 import scala.util.chaining._
+import scala.annotation.tailrec
 
 object DynamodbScanOperation {
 
@@ -56,6 +57,7 @@ case class DynamodbScanOperation(task: DynamodbScanOperation.Task)
       }
   }
 
+  @tailrec
   private def runInternal(
       dynamodb: AmazonDynamoDB,
       embulkTaskIndex: Int,
@@ -74,14 +76,16 @@ case class DynamodbScanOperation(task: DynamodbScanOperation.Task)
         f(result.getItems.asScala.take(v.toInt).map(_.asScala.toMap).toSeq)
       case _ =>
         f(result.getItems.asScala.map(_.asScala.toMap).toSeq)
-        Option(result.getLastEvaluatedKey).foreach { lastEvaluatedKey =>
-          runInternal(
-            dynamodb,
-            embulkTaskIndex,
-            f,
-            lastEvaluatedKey = Option(lastEvaluatedKey.asScala.toMap),
-            loadedRecords = loadedRecords + result.getCount
-          )
+        Option(result.getLastEvaluatedKey) match {
+          case Some(v) if (loadableRecords.isDefined) =>
+            runInternal(
+              dynamodb,
+              embulkTaskIndex,
+              f,
+              lastEvaluatedKey = Option(v.asScala.toMap),
+              loadedRecords = loadedRecords + result.getCount
+            )
+          case _ => // do nothing
         }
     }
   }
