@@ -7,6 +7,7 @@ import org.embulk.input.dynamodb.logger
 
 import scala.jdk.CollectionConverters._
 import scala.util.chaining._
+import scala.annotation.tailrec
 
 object DynamodbQueryOperation {
 
@@ -37,6 +38,7 @@ case class DynamodbQueryOperation(task: DynamodbQueryOperation.Task)
       .tap(r => r.setScanIndexForward(task.getScanIndexForward))
   }
 
+  @tailrec
   private def runInternal(
       dynamodb: AmazonDynamoDB,
       f: Seq[Map[String, AttributeValue]] => Unit,
@@ -53,13 +55,15 @@ case class DynamodbQueryOperation(task: DynamodbQueryOperation.Task)
         f(result.getItems.asScala.take(v.toInt).map(_.asScala.toMap).toSeq)
       case _ =>
         f(result.getItems.asScala.map(_.asScala.toMap).toSeq)
-        Option(result.getLastEvaluatedKey).foreach { lastEvaluatedKey =>
-          runInternal(
-            dynamodb,
-            f,
-            lastEvaluatedKey = Option(lastEvaluatedKey.asScala.toMap),
-            loadedRecords = loadedRecords + result.getCount
-          )
+        Option(result.getLastEvaluatedKey) match {
+          case Some(v) =>
+            runInternal(
+              dynamodb,
+              f,
+              lastEvaluatedKey = Option(v.asScala.toMap),
+              loadedRecords = loadedRecords + result.getCount
+            )
+          case None => // do nothing
         }
     }
   }
