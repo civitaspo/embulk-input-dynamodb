@@ -77,7 +77,7 @@ case class DynamodbScanOperation(task: DynamodbScanOperation.Task)
       case _ =>
         f(result.getItems.asScala.map(_.asScala.toMap).toSeq)
         Option(result.getLastEvaluatedKey) match {
-          case Some(v) if (loadableRecords.isDefined) =>
+          case Some(v) =>
             runInternal(
               dynamodb,
               embulkTaskIndex,
