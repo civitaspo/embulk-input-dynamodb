@@ -1,3 +1,8 @@
+1.0.4 (2023-03-19)
+==================
+
+- [fix] [#32](https://github.com/civitaspo/embulk-input-dynamodb/pull/32) Remove unnecessary if clause (follow up [#31](https://github.com/civitaspo/embulk-input-dynamodb/pull/31)).
+
 1.0.3 (2023-02-17)
 ==================
 
